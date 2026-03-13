@@ -1,15 +1,33 @@
-import { Platform, StyleSheet, Text, View } from "react-native";
+import * as Haptics from "expo-haptics";
+import * as React from "react";
 
-import { ExternalLink } from "@/components/external-link";
+import { Platform, StyleSheet, View } from "react-native";
+
 import ParallaxScrollView from "@/components/parallax-scroll-view";
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
-import { Collapsible } from "@/components/ui/collapsible";
+import { Checkbox } from "@/components/ui/checkbox";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { Fonts } from "@/constants/theme";
-import { Image } from "expo-image";
+import { Label } from "@/components/ui/label";
+import { Text } from "@/components/ui/text";
+import { cn } from "@/lib/utils";
 
 export default function TabTwoScreen() {
+  const [state, setState] = React.useState({
+    termsChecked: true,
+    terms2Checked: true,
+    toggleChecked: false,
+    toggle2Checked: false,
+  });
+
+  function toggleCheckedState(key: keyof typeof state) {
+    return () => {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      setState((prev) => ({
+        ...prev,
+        [key]: !prev[key],
+      }));
+    };
+  }
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: "#D0D0D0", dark: "#353636" }}
@@ -22,96 +40,89 @@ export default function TabTwoScreen() {
         />
       }
     >
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText
-          type="title"
-          style={{
-            fontFamily: Fonts.rounded,
-          }}
+      <View className="flex flex-col gap-6">
+        <View className="flex flex-row items-center gap-3">
+          <Checkbox
+            id="terms"
+            checked={state.termsChecked}
+            onCheckedChange={toggleCheckedState("termsChecked")}
+          />
+          <Label
+            onPress={Platform.select({
+              native: toggleCheckedState("termsChecked"),
+            })}
+            htmlFor="terms"
+          >
+            Accept terms and conditions
+          </Label>
+        </View>
+        <View className="flex flex-row items-start gap-3">
+          <Checkbox
+            id="terms-2"
+            checked={state.terms2Checked}
+            onCheckedChange={toggleCheckedState("terms2Checked")}
+          />
+          <View className="flex-1 gap-2">
+            <Label
+              onPress={Platform.select({
+                native: toggleCheckedState("terms2Checked"),
+              })}
+              htmlFor="terms-2"
+            >
+              Accept terms and conditions
+            </Label>
+            <Text className="text-muted-foreground text-sm">
+              By clicking this checkbox, you agree to the terms and conditions.
+            </Text>
+          </View>
+        </View>
+        <View className="flex flex-row items-start gap-3">
+          <Checkbox
+            id="toggle"
+            disabled
+            checked={state.toggleChecked}
+            onCheckedChange={toggleCheckedState("toggleChecked")}
+          />
+          <Label
+            onPress={Platform.select({
+              native: toggleCheckedState("toggleChecked"),
+            })}
+            htmlFor="toggle"
+            disabled
+          >
+            Enable notifications
+          </Label>
+        </View>
+        <Label
+          onPress={Platform.select({
+            native: toggleCheckedState("toggle2Checked"),
+          })}
+          htmlFor="toggle-2"
+          className={cn(
+            "web:hover:bg-accent/50 border-border flex flex-row rounded-lg border p-3",
+            state.toggle2Checked &&
+              "web:hover:bg-blue-50 border-blue-600 bg-blue-50 dark:border-blue-900 dark:bg-blue-950",
+          )}
         >
-          Explore
-        </ThemedText>
-      </ThemedView>
-      <ThemedText>
-        This app includes example code to help you get started.
-      </ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{" "}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText>{" "}
-          and{" "}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in{" "}
-          <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{" "}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the
-          web version, press <ThemedText type="defaultSemiBold">w</ThemedText>{" "}
-          in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the{" "}
-          <ThemedText type="defaultSemiBold">@2x</ThemedText> and{" "}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to
-          provide files for different screen densities
-        </ThemedText>
-        <Image
-          source={require("@/assets/images/react-logo.png")}
-          style={{ width: 100, height: 100, alignSelf: "center" }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{" "}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook
-          lets you inspect what the user&apos;s current color scheme is, and so
-          you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{" "}
-          <ThemedText type="defaultSemiBold">
-            components/HelloWave.tsx
-          </ThemedText>{" "}
-          component uses the powerful{" "}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{" "}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The{" "}
-              <ThemedText type="defaultSemiBold">
-                components/ParallaxScrollView.tsx
-              </ThemedText>{" "}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-      <View className="flex-1 items-center justify-center bg-white">
-        <Text className="text-xl font-bold text-blue-500">
-          Welcome to Nativewind!
-        </Text>
+          <View className="flex flex-1 flex-row items-start gap-3">
+            <Checkbox
+              id="toggle-2"
+              checked={state.toggle2Checked}
+              onCheckedChange={toggleCheckedState("toggle2Checked")}
+              checkedClassName="border-blue-600 bg-blue-600 dark:border-blue-700"
+              indicatorClassName="bg-blue-600 dark:bg-blue-700"
+              iconClassName="text-white"
+            />
+            <View className="flex-1">
+              <Text className="text-sm font-medium leading-none">
+                Enable notifications
+              </Text>
+              <Text className="text-muted-foreground text-sm">
+                You can enable or disable notifications at any time.
+              </Text>
+            </View>
+          </View>
+        </Label>
       </View>
     </ParallaxScrollView>
   );

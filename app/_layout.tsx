@@ -8,6 +8,7 @@ import {
 } from "@react-navigation/native";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import { PortalHost } from "@rn-primitives/portal";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
@@ -28,6 +29,7 @@ export default function RootLayout() {
         />
       </Stack>
       <StatusBar style="auto" />
+      <PortalHost />
     </ThemeProvider>
   );
 }
