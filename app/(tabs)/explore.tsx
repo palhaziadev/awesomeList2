@@ -1,16 +1,18 @@
 import * as Haptics from "expo-haptics";
 import * as React from "react";
 
-import { Platform, StyleSheet, View } from "react-native";
+import { Text } from "@/components/ui/text";
+import { Button, Platform, StyleSheet, View } from "react-native";
 
 import ParallaxScrollView from "@/components/parallax-scroll-view";
 import { Checkbox } from "@/components/ui/checkbox";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Label } from "@/components/ui/label";
-import { Text } from "@/components/ui/text";
+import { useAuth } from "@/context/auth-context";
 import { cn } from "@/lib/utils";
 
 export default function TabTwoScreen() {
+  const { user, isLoading, signIn, signOut } = useAuth();
   const [state, setState] = React.useState({
     termsChecked: true,
     terms2Checked: true,
@@ -118,11 +120,24 @@ export default function TabTwoScreen() {
                 Enable notifications
               </Text>
               <Text className="text-muted-foreground text-sm">
-                You can enable or disable notifications at any time.
+                You can enable or disable notifications at any time.{" "}
+                {user?.email ?? "Not signed in"}
               </Text>
             </View>
           </View>
         </Label>
+        <Button title="Google Sign-In" onPress={() => signIn()} />
+        <View className="flex-1">
+          <Text className="text-muted-foreground text-sm">
+            {user?.email ? `Signed in as ${user.email}` : "Not signed in"}
+          </Text>
+        </View>
+        {user && <Button title="Google Sign-Out" onPress={() => signOut()} />}
+        <View className="flex-1">
+          <Text className="text-muted-foreground text-sm">
+            {isLoading ? "Loading..." : "not loading"}
+          </Text>
+        </View>
       </View>
     </ParallaxScrollView>
   );

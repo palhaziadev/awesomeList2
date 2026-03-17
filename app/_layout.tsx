@@ -1,13 +1,7 @@
 import "react-native-reanimated";
 import "../global.css";
 
-import {
-  DarkTheme,
-  DefaultTheme,
-  ThemeProvider,
-} from "@react-navigation/native";
-
-import { useColorScheme } from "@/hooks/use-color-scheme";
+import { AuthProvider } from "@/context/auth-context";
 import { PortalHost } from "@rn-primitives/portal";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -17,10 +11,8 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+    <AuthProvider>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen
@@ -30,6 +22,6 @@ export default function RootLayout() {
       </Stack>
       <StatusBar style="auto" />
       <PortalHost />
-    </ThemeProvider>
+    </AuthProvider>
   );
 }
