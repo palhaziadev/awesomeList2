@@ -6,13 +6,14 @@ import { useRouter } from "expo-router";
 import { X } from "lucide-react-native";
 import * as React from "react";
 import { Pressable, ScrollView, View } from "react-native";
-import Animated, { SlideInLeft, SlideOutRight } from "react-native-reanimated";
+import Animated, { LinearTransition, SlideInLeft, SlideOutRight } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
   const router = useRouter();
   const [lists, setLists] = React.useState<TodoList[]>([]);
   const [inputText, setInputText] = React.useState("");
+  const isAdding = React.useRef(false);
 
   function handleAdd() {
     if (!inputText.trim()) return;
@@ -24,11 +25,13 @@ export default function HomeScreen() {
       createdBy: "",
       items: [],
     };
+    isAdding.current = true;
     setLists((prev) => [newList, ...prev]);
     setInputText("");
   }
 
   function handleRemove(listId: string) {
+    isAdding.current = false;
     setLists((prev) => prev.filter((l) => l.listId !== listId));
   }
 
@@ -51,8 +54,9 @@ export default function HomeScreen() {
         {lists.map((list) => (
           <Animated.View
             key={list.listId}
-            entering={SlideInLeft}
+            entering={SlideInLeft.delay(300)}
             exiting={SlideOutRight}
+            layout={isAdding.current ? LinearTransition : LinearTransition.delay(300)}
           >
             <Pressable
               className="flex-row items-center border border-border rounded-md p-3 bg-background"
