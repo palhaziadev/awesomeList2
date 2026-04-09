@@ -1,30 +1,100 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
+import { supabase } from "@/lib/supabase.config";
 import { TodoList } from "@/models/Todo";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { X } from "lucide-react-native";
 import * as React from "react";
-import { Pressable, ScrollView, View } from "react-native";
-import Animated, { LinearTransition, SlideInLeft, SlideOutRight } from "react-native-reanimated";
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  ScrollView,
+  View,
+} from "react-native";
+import Animated, {
+  LinearTransition,
+  SlideInLeft,
+  SlideOutRight,
+} from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
   const router = useRouter();
   const [lists, setLists] = React.useState<TodoList[]>([]);
   const [inputText, setInputText] = React.useState("");
+  const [isSaving, setIsSaving] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
   const isAdding = React.useRef(false);
 
-  function handleAdd() {
+  // commit supabase config before continue or implement realime updates?
+  // TODO what is useFocusEffect?
+  useFocusEffect(
+    React.useCallback(() => {
+      async function fetchLists() {
+        const { data, error } = await supabase
+          .from("todo_list")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        setIsLoading(false);
+
+        if (error) {
+          Alert.alert("Error", error.message);
+          return;
+        }
+
+        console.log("aaa lists data", data);
+
+        setLists(
+          (data ?? []).map((row) => ({
+            listId: row.id,
+            listName: row.list_name,
+            owner: row.owner ?? "",
+            createdBy: row.created_by ?? "",
+            createdAt: row.created_at,
+            items: [],
+          })),
+        );
+      }
+
+      setIsLoading(true);
+      fetchLists();
+    }, []),
+  );
+
+  async function handleAdd() {
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    console.log("aaa userData", userData);
+    if (userError) {
+      Alert.alert("Error", userError.message);
+      return;
+    }
     if (!inputText.trim()) return;
+    const now = new Date().toISOString();
     const newList: TodoList = {
       listId: Date.now().toString(),
       listName: inputText.trim(),
-      createdAt: new Date().toISOString(),
-      owner: "",
-      createdBy: "",
+      createdAt: now,
+      owner: userData.user?.id ?? "",
+      createdBy: userData.user?.id ?? "",
       items: [],
     };
+
+    setIsSaving(true);
+    const { error } = await supabase.from("todo_list").insert({
+      list_name: newList.listName,
+      created_by: newList.createdBy,
+      created_at: newList.createdAt,
+    });
+    setIsSaving(false);
+
+    if (error) {
+      Alert.alert("Error", error.message);
+      return;
+    }
+
     isAdding.current = true;
     setLists((prev) => [newList, ...prev]);
     setInputText("");
@@ -46,17 +116,20 @@ export default function HomeScreen() {
           onSubmitEditing={handleAdd}
           returnKeyType="done"
         />
-        <Button disabled={!inputText.trim()} onPress={handleAdd}>
+        <Button disabled={!inputText.trim() || isSaving} onPress={handleAdd}>
           <Text>Add</Text>
         </Button>
       </View>
       <ScrollView className="flex-1" contentContainerClassName="gap-2">
+        {isLoading && <ActivityIndicator className="mt-4" />}
         {lists.map((list) => (
           <Animated.View
             key={list.listId}
             entering={SlideInLeft.delay(300)}
             exiting={SlideOutRight}
-            layout={isAdding.current ? LinearTransition : LinearTransition.delay(300)}
+            layout={
+              isAdding.current ? LinearTransition : LinearTransition.delay(300)
+            }
           >
             <Pressable
               className="flex-row items-center border border-border rounded-md p-3 bg-background"

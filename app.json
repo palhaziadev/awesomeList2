@@ -24,7 +24,8 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "ios": {
       "supportsTablet": true
@@ -46,7 +47,6 @@
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
-
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true

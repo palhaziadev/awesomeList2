@@ -37,6 +37,8 @@ export type ListSharedWith = {
   added?: boolean;
 };
 
+// TODO try generate supabase types and use them here
+// https://supabase.com/docs/guides/api/rest/generating-types
 export type TodoList = {
   owner: string;
   createdAt: string;
