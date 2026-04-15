@@ -17,6 +17,7 @@ export default function RootLayout() {
       <AuthProvider>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="list/[listId]" options={{ headerShown: false }} />
         </Stack>
         <StatusBar style="auto" />
         <PortalHost />

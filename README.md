@@ -52,3 +52,6 @@ Join our community of developers creating universal apps.
 ## Todo
 
 - [ ] Add manual dark/light theme switcher
+- [ ] Add private lists
+- [ ] Add share list
+- [ ] Try generate types from supabase
