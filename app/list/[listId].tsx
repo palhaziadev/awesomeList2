@@ -42,9 +42,23 @@ export default function ListScreen() {
       </View>
       <ScrollView className="flex-1" contentContainerClassName="gap-2">
         {isLoading && <ActivityIndicator className="mt-4" />}
-        {items.map((item) => (
-          <TodoItemRow key={item.id} item={item} onRemove={removeItem} onToggleDone={toggleDone} />
-        ))}
+        {items
+          .filter((item) => !item.isDone)
+          .map((item) => (
+            <TodoItemRow key={item.id} item={item} onRemove={removeItem} onToggleDone={toggleDone} />
+          ))}
+        {items.some((item) => !item.isDone) && items.some((item) => item.isDone) && (
+          <View className="flex-row items-center gap-2 my-1">
+            <View className="flex-1 h-px bg-border" />
+            <Text className="text-xs text-muted-foreground">Done</Text>
+            <View className="flex-1 h-px bg-border" />
+          </View>
+        )}
+        {items
+          .filter((item) => item.isDone)
+          .map((item) => (
+            <TodoItemRow key={item.id} item={item} onRemove={removeItem} onToggleDone={toggleDone} />
+          ))}
       </ScrollView>
     </SafeAreaView>
   );
