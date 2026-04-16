@@ -15,7 +15,7 @@ export default function ListScreen() {
     listName: string;
   }>();
 
-  const { items, isLoading, isSaving, addItem, removeItem } =
+  const { items, isLoading, isSaving, addItem, removeItem, toggleDone } =
     useTodoItems(listId);
   const [inputText, setInputText] = React.useState("");
 
@@ -43,7 +43,7 @@ export default function ListScreen() {
       <ScrollView className="flex-1" contentContainerClassName="gap-2">
         {isLoading && <ActivityIndicator className="mt-4" />}
         {items.map((item) => (
-          <TodoItemRow key={item.id} item={item} onRemove={removeItem} />
+          <TodoItemRow key={item.id} item={item} onRemove={removeItem} onToggleDone={toggleDone} />
         ))}
       </ScrollView>
     </SafeAreaView>

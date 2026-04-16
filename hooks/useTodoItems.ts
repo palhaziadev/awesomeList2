@@ -137,5 +137,29 @@ export function useTodoItems(listId: string) {
     }
   }
 
-  return { items, isLoading, isSaving, addItem, removeItem };
+  async function toggleDone(id: string, isDone: boolean) {
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError) return;
+
+    const updatedBy = userData.user?.id ?? "";
+    const updatedAt = new Date().toISOString();
+
+    setItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, isDone } : item)),
+    );
+
+    const { error } = await supabase
+      .from("todo_list_items")
+      .update({ is_done: isDone, updated_by: updatedBy, updated_at: updatedAt })
+      .eq("id", id);
+
+    if (error) {
+      setItems((prev) =>
+        prev.map((item) => (item.id === id ? { ...item, isDone: !isDone } : item)),
+      );
+      Alert.alert("Error", "Failed to update item. Please try again.");
+    }
+  }
+
+  return { items, isLoading, isSaving, addItem, removeItem, toggleDone };
 }
