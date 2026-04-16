@@ -2,6 +2,7 @@ import { ScreenHeader } from "@/components/ScreenHeader";
 import { TodoItemRow } from "@/components/TodoItemRow";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { Text } from "@/components/ui/text";
 import { useTodoItems } from "@/hooks/useTodoItems";
 import { useLocalSearchParams } from "expo-router";
@@ -18,6 +19,7 @@ export default function ListScreen() {
   const { items, isLoading, isSaving, addItem, removeItem, toggleDone } =
     useTodoItems(listId);
   const [inputText, setInputText] = React.useState("");
+  const [grouping, setGrouping] = React.useState(true);
 
   async function handleAdd() {
     const success = await addItem(inputText);
@@ -40,25 +42,37 @@ export default function ListScreen() {
           <Text>Add</Text>
         </Button>
       </View>
+      <View className="flex-row items-center justify-between">
+        <Text className="text-sm text-muted-foreground">Grouping</Text>
+        <Switch checked={grouping} onCheckedChange={setGrouping} />
+      </View>
       <ScrollView className="flex-1" contentContainerClassName="gap-2">
         {isLoading && <ActivityIndicator className="mt-4" />}
-        {items
-          .filter((item) => !item.isDone)
-          .map((item) => (
+        {grouping ? (
+          <>
+            {items
+              .filter((item) => !item.isDone)
+              .map((item) => (
+                <TodoItemRow key={item.id} item={item} onRemove={removeItem} onToggleDone={toggleDone} />
+              ))}
+            {items.some((item) => !item.isDone) && items.some((item) => item.isDone) && (
+              <View className="flex-row items-center gap-2 my-1">
+                <View className="flex-1 h-px bg-border" />
+                <Text className="text-xs text-muted-foreground">Done</Text>
+                <View className="flex-1 h-px bg-border" />
+              </View>
+            )}
+            {items
+              .filter((item) => item.isDone)
+              .map((item) => (
+                <TodoItemRow key={item.id} item={item} onRemove={removeItem} onToggleDone={toggleDone} />
+              ))}
+          </>
+        ) : (
+          items.map((item) => (
             <TodoItemRow key={item.id} item={item} onRemove={removeItem} onToggleDone={toggleDone} />
-          ))}
-        {items.some((item) => !item.isDone) && items.some((item) => item.isDone) && (
-          <View className="flex-row items-center gap-2 my-1">
-            <View className="flex-1 h-px bg-border" />
-            <Text className="text-xs text-muted-foreground">Done</Text>
-            <View className="flex-1 h-px bg-border" />
-          </View>
+          ))
         )}
-        {items
-          .filter((item) => item.isDone)
-          .map((item) => (
-            <TodoItemRow key={item.id} item={item} onRemove={removeItem} onToggleDone={toggleDone} />
-          ))}
       </ScrollView>
     </SafeAreaView>
   );
