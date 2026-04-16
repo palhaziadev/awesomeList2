@@ -51,6 +51,7 @@ Join our community of developers creating universal apps.
 
 ## Todo
 
+- [ ] Create better table policies
 - [ ] Add manual dark/light theme switcher
 - [ ] Add private lists
 - [ ] Add share list

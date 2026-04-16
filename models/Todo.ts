@@ -11,6 +11,7 @@ export type Item = {
 };
 
 export type TodoItem = Item & {
+  id: string; // TODO check if needed
   isDone?: boolean;
 };
 
