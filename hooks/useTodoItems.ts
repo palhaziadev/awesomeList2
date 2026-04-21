@@ -1,6 +1,12 @@
+import { TRANSLATION_SOURCE_LANG, TRANSLATION_TARGET_LANG } from "@/lib/constants";
 import { supabase } from "@/lib/supabase.config";
 import { TodoItem } from "@/models/Todo";
 import { mapRowToTodoItem } from "@/utils/mappers";
+import {
+  FunctionsFetchError,
+  FunctionsHttpError,
+  FunctionsRelayError,
+} from "@supabase/supabase-js";
 import { useFocusEffect } from "expo-router";
 import * as React from "react";
 import { Alert } from "react-native";
@@ -9,17 +15,16 @@ export function useTodoItems(listId: string) {
   const [items, setItems] = React.useState<TodoItem[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isSaving, setIsSaving] = React.useState(false);
+  const channelCleanupRef = React.useRef<(() => void) | undefined>(undefined);
 
   useFocusEffect(
     React.useCallback(() => {
-      // Holds the channel cleanup; assigned asynchronously after subscribe()
-      let channelCleanup: (() => void) | undefined;
 
       async function fetchItems() {
         setIsLoading(true);
         const { data, error } = await supabase
           .from("todo_list_items")
-          .select("*, todo_items(name)")
+          .select("*, todo_items(name, translation)")
           .eq("list_id", listId);
 
         setIsLoading(false);
@@ -30,7 +35,13 @@ export function useTodoItems(listId: string) {
         }
 
         setItems(
-          (data ?? []).map((row) => mapRowToTodoItem(row, row.todo_items?.name ?? "")),
+          (data ?? []).map((row) =>
+            mapRowToTodoItem(
+              row,
+              row.todo_items?.name ?? "",
+              row.todo_items?.translation ?? undefined,
+            ),
+          ),
         );
       }
 
@@ -43,12 +54,19 @@ export function useTodoItems(listId: string) {
             const record = payload.record;
             const { data } = await supabase
               .from("todo_items")
-              .select("name")
+              .select("name, translation")
               .eq("id", record.item_id)
               .single();
             setItems((prev) => {
               if (prev.some((i) => i.id === record.id)) return prev;
-              return [mapRowToTodoItem(record, data?.name ?? ""), ...prev];
+              return [
+                mapRowToTodoItem(
+                  record,
+                  data?.name ?? "",
+                  data?.translation ?? undefined,
+                ),
+                ...prev,
+              ];
             });
           })
           .on("broadcast", { event: "UPDATE" }, ({ payload }) => {
@@ -68,15 +86,16 @@ export function useTodoItems(listId: string) {
           })
           .subscribe();
 
-        channelCleanup = () => supabase.removeChannel(channel);
+        channelCleanupRef.current = () => supabase.removeChannel(channel);
       }
 
       fetchItems();
       setupBroadcast();
 
-      // Cleanup runs synchronously when the screen loses focus.
-      // channelCleanup is set asynchronously but will be defined by then.
-      return () => channelCleanup?.();
+      return () => {
+        channelCleanupRef.current?.();
+        channelCleanupRef.current = undefined;
+      };
     }, [listId]),
   );
 
@@ -90,6 +109,31 @@ export function useTodoItems(listId: string) {
       return false;
     }
 
+    const { data, error } = await supabase.functions.invoke("translator", {
+      body: {
+        text: text.toLowerCase(),
+        targetLanguage: TRANSLATION_TARGET_LANG,
+        sourceLanguage: TRANSLATION_SOURCE_LANG,
+      },
+    });
+
+    if (error) {
+      let message =
+        "Translation failed. The item will be added without a translation.";
+      if (error instanceof FunctionsHttpError) {
+        const body = await error.context.json().catch(() => null);
+        if (body?.message) message = body.message;
+      } else if (error instanceof FunctionsFetchError) {
+        message =
+          "Could not reach the translation service. Check your connection.";
+      } else if (error instanceof FunctionsRelayError) {
+        message = "Translation service is temporarily unavailable.";
+      }
+      Alert.alert("Translation error", message);
+    }
+
+    const translation: string | undefined = data?.translatedText ?? undefined;
+
     setIsSaving(true);
     try {
       const now = new Date().toISOString();
@@ -97,7 +141,12 @@ export function useTodoItems(listId: string) {
 
       const { error: itemsError, data: itemData } = await supabase
         .from("todo_items")
-        .insert({ name: trimmed, created_by: createdBy, created_at: now })
+        .insert({
+          name: trimmed,
+          translation,
+          created_by: createdBy,
+          created_at: now,
+        })
         .select()
         .single();
 
@@ -130,9 +179,14 @@ export function useTodoItems(listId: string) {
   }
 
   async function removeItem(id: string) {
+    const previous = items;
     setItems((prev) => prev.filter((i) => i.id !== id));
-    const { error } = await supabase.from("todo_list_items").delete().eq("id", id);
+    const { error } = await supabase
+      .from("todo_list_items")
+      .delete()
+      .eq("id", id);
     if (error) {
+      setItems(previous);
       Alert.alert("Error", "Failed to remove item. Please try again.");
     }
   }
@@ -155,7 +209,9 @@ export function useTodoItems(listId: string) {
 
     if (error) {
       setItems((prev) =>
-        prev.map((item) => (item.id === id ? { ...item, isDone: !isDone } : item)),
+        prev.map((item) =>
+          item.id === id ? { ...item, isDone: !isDone } : item,
+        ),
       );
       Alert.alert("Error", "Failed to update item. Please try again.");
     }

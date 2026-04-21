@@ -28,8 +28,6 @@ export default function HomeScreen() {
   const [isLoading, setIsLoading] = React.useState(true);
   const isAdding = React.useRef(false);
 
-  // commit supabase config before continue or implement realime updates?
-  // TODO what is useFocusEffect?
   useFocusEffect(
     React.useCallback(() => {
       async function fetchLists() {

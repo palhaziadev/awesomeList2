@@ -51,6 +51,11 @@ Join our community of developers creating universal apps.
 
 ## Todo
 
+- [ ] Add autocomplete for add items input
+- [ ] Add different ordering options
+- [ ] Add pull+refresh to lists
+- [x] Add translation for items
+- [ ] Add list item recognition from photo
 - [ ] Create better table policies
 - [ ] Add manual dark/light theme switcher
 - [ ] Add private lists

@@ -8,11 +8,16 @@ type TodoListItemRow = {
   is_done: boolean | null;
 };
 
-export function mapRowToTodoItem(row: TodoListItemRow, itemName: string): TodoItem {
+export function mapRowToTodoItem(
+  row: TodoListItemRow,
+  itemName: string,
+  translation?: string,
+): TodoItem {
   return {
     id: row.id,
     itemId: row.item_id,
     itemName,
+    translation,
     createdAt: row.created_at,
     createdBy: row.created_by ?? "",
     isDone: row.is_done ?? false,

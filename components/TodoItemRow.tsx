@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Text } from "@/components/ui/text";
+import { cn } from "@/lib/utils";
 import { TodoItem } from "@/models/Todo";
 import { X } from "lucide-react-native";
 import { View } from "react-native";
@@ -17,6 +18,7 @@ type Props = {
 };
 
 export function TodoItemRow({ item, onRemove, onToggleDone }: Props) {
+  const displayTranslation = item.translationOverride ?? item.translation;
   return (
     <Animated.View
       entering={SlideInLeft.delay(300)}
@@ -28,9 +30,21 @@ export function TodoItemRow({ item, onRemove, onToggleDone }: Props) {
           checked={item.isDone ?? false}
           onCheckedChange={(checked) => onToggleDone(item.id, !!checked)}
         />
-        <Text className={`flex-1 text-sm font-medium${item.isDone ? " line-through text-muted-foreground" : ""}`}>
-          {item.itemName}
-        </Text>
+        <View className="flex-1">
+          <Text
+            className={cn(
+              "text-sm font-medium",
+              item.isDone && "line-through text-muted-foreground",
+            )}
+          >
+            {item.itemName}
+          </Text>
+          {displayTranslation ? (
+            <Text className="text-xs text-muted-foreground">
+              {displayTranslation}
+            </Text>
+          ) : null}
+        </View>
         <Button variant="ghost" size="icon" onPress={() => onRemove(item.id)}>
           <X size={16} className="text-muted-foreground" />
         </Button>
