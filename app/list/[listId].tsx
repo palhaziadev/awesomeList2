@@ -1,6 +1,7 @@
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { TodoItemRow } from "@/components/TodoItemRow";
 import { Button } from "@/components/ui/button";
+import { ItemListFilter } from "@/components/ItemListFilter";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Text } from "@/components/ui/text";
@@ -44,7 +45,10 @@ export default function ListScreen() {
       </View>
       <View className="flex-row items-center justify-between">
         <Text className="text-sm text-muted-foreground">Grouping</Text>
-        <Switch checked={grouping} onCheckedChange={setGrouping} />
+        <View className="flex-row items-center gap-3">
+          <Switch checked={grouping} onCheckedChange={setGrouping} />
+          <ItemListFilter />
+        </View>
       </View>
       <ScrollView className="flex-1" contentContainerClassName="gap-2">
         {isLoading && <ActivityIndicator className="mt-4" />}
