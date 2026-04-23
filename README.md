@@ -52,7 +52,7 @@ Join our community of developers creating universal apps.
 ## Todo
 
 - [ ] Add autocomplete for add items input
-- [ ] Add different ordering options
+- [x] Add different ordering options
 - [ ] Add pull+refresh to lists
 - [x] Add translation for items
 - [ ] Add list item recognition from photo
@@ -61,3 +61,7 @@ Join our community of developers creating universal apps.
 - [ ] Add private lists
 - [ ] Add share list
 - [ ] Try generate types from supabase
+- [ ] Try superpowers
+- [x] add unit testing
+- [x] add test coverage report
+- [ ] add e2e testing https://maestro.dev/
