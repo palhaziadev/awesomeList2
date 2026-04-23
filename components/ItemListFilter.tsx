@@ -1,19 +1,15 @@
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Toggle } from "@/components/ui/toggle";
 import {
   ArrowDownNarrowWide,
   ArrowUpNarrowWide,
   ListFilter,
-  X,
 } from "lucide-react-native";
-import * as React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 
 type Order = "asc" | "desc" | null;
 
@@ -32,27 +28,31 @@ function OrderToggle({
   onChange?: (order: "asc" | "desc") => void;
 }) {
   return (
-    <View className="flex-row px-2 pb-1">
-      <Pressable
-        className="flex-1 items-center"
-        onPress={() => onChange?.("asc")}
+    <View className="flex-row gap-2">
+      <Toggle
+        pressed={value === "asc"}
+        onPressedChange={() => onChange?.("asc")}
+        variant="outline"
+        size="sm"
+        className="flex-1"
       >
         <ArrowUpNarrowWide
-          size={20}
-          className={value === "asc" ? "text-primary" : "text-muted-foreground"}
+          size={18}
+          className={value === "asc" ? "text-accent-foreground" : "text-muted-foreground"}
         />
-      </Pressable>
-      <Pressable
-        className="flex-1 items-center"
-        onPress={() => onChange?.("desc")}
+      </Toggle>
+      <Toggle
+        pressed={value === "desc"}
+        onPressedChange={() => onChange?.("desc")}
+        variant="outline"
+        size="sm"
+        className="flex-1"
       >
         <ArrowDownNarrowWide
-          size={20}
-          className={
-            value === "desc" ? "text-primary" : "text-muted-foreground"
-          }
+          size={18}
+          className={value === "desc" ? "text-accent-foreground" : "text-muted-foreground"}
         />
-      </Pressable>
+      </Toggle>
     </View>
   );
 }
@@ -64,28 +64,26 @@ export function ItemListFilter({
   onAlphaOrderChange,
 }: Props) {
   return (
-    // TODO maybe use popover with toggles instead of dropdown menu
-    <DropdownMenu>
-      <DropdownMenuTrigger>
+    <Popover>
+      <PopoverTrigger>
         <ListFilter size={20} className="text-muted-foreground" />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent>
-        <DropdownMenuItem>
-          {/* // TODO: Implement group by shop functionality */}
-          <Text>Group by Shop</Text>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuLabel>Order by Date</DropdownMenuLabel>
-        <OrderToggle value={dateOrder} onChange={onDateOrderChange} />
-        <DropdownMenuSeparator />
-        <DropdownMenuLabel>Order by Alphabet</DropdownMenuLabel>
-        <OrderToggle value={alphaOrder} onChange={onAlphaOrderChange} />
-        <DropdownMenuSeparator />
-        <DropdownMenuItem className="justify-center">
-          <X size={16} className="text-muted-foreground" />
-          <Text className="text-muted-foreground text-sm">Close</Text>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </PopoverTrigger>
+      <PopoverContent className="w-52 p-3">
+        <View className="gap-4">
+          <View className="gap-2">
+            <Text className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              Order by Date
+            </Text>
+            <OrderToggle value={dateOrder} onChange={onDateOrderChange} />
+          </View>
+          <View className="gap-2">
+            <Text className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              Order by Alphabet
+            </Text>
+            <OrderToggle value={alphaOrder} onChange={onAlphaOrderChange} />
+          </View>
+        </View>
+      </PopoverContent>
+    </Popover>
   );
 }

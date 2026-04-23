@@ -21,7 +21,7 @@ export default function ListScreen() {
     useTodoItems(listId);
   const [inputText, setInputText] = React.useState("");
   const [grouping, setGrouping] = React.useState(true);
-  const [dateOrder, setDateOrder] = React.useState<"asc" | "desc" | null>(null);
+  const [dateOrder, setDateOrder] = React.useState<"asc" | "desc" | null>("desc");
   const [alphaOrder, setAlphaOrder] = React.useState<"asc" | "desc" | null>(null);
 
   const sortedItems = React.useMemo(() => {
