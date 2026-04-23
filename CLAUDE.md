@@ -17,6 +17,11 @@ npm run ios
 # Lint
 npm run lint
 
+# Tests
+npm run test          # run tests
+npm run test:watch    # watch mode
+npm run test:coverage # coverage report
+
 # Prebuild native projects (after adding native dependencies)
 npm run native:build
 
@@ -27,8 +32,6 @@ npm run native:build:clean
 npm run android:eas:dev    # development build
 npm run android:eas:pre    # preview build
 ```
-
-There is no test runner configured.
 
 ## Architecture
 
@@ -41,6 +44,7 @@ There is no test runner configured.
 - `app/(tabs)/_layout.tsx` — bottom tab navigator (Home, Explore)
 - `app/(tabs)/index.tsx` — Home tab
 - `app/(tabs)/explore.tsx` — Explore tab
+- `app/list/[listId].tsx` — list detail screen: view/manage items, sorting, filtering, grouping, translations
 
 ### Auth
 
@@ -48,6 +52,20 @@ There is no test runner configured.
 - `services/auth.service.ts` — Firebase Auth + Google Sign-In logic
 - Uses `@react-native-firebase/auth` (native SDK, not the JS SDK) — auto-initializes from `android/app/google-services.json`; no `initializeApp()` needed
 - Google Sign-In Web Client ID: `203722623000-e1nuqqv0mo5dsd9ga0sofiojrafske9v.apps.googleusercontent.com`
+
+### Data & Backend
+
+- **Supabase** is the primary database (Firebase is Auth-only)
+- `lib/supabase.ts` — Supabase client; credentials via `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY`
+- PostgreSQL tables: `todo_list`, `todo_list_items`, `todo_items`
+- Real-time via Supabase broadcast channels (private, per-list)
+- Supabase Edge Functions handle text translation (HU→ES)
+
+### Hooks & Services
+
+- `hooks/useTodoItems.ts` — manages todo items for a list: CRUD, real-time Supabase subscriptions, optimistic UI with rollback, translation integration
+- `services/translator.service.ts` — calls Supabase Edge Functions to translate item names on creation; fails gracefully
+- `services/auth.service.ts` — Firebase Auth + Google Sign-In
 
 ### Styling
 
@@ -61,13 +79,19 @@ There is no test runner configured.
 
 - `components/ui/` — Shadcn-style primitives built on `@rn-primitives/` (Radix UI ports for React Native)
 - Icons via `lucide-react-native`
+- `components/ItemListFilter.tsx` — sort/filter bar for todo items (order by date, order by alphabet)
+- `components/ScreenHeader.tsx` — navigation header with back button
+- `components/TodoItemRow.tsx` — individual todo item row with animated transitions, checkbox, delete
+- Animations via `react-native-reanimated` (~4.1.1)
 
 ### Native / Build
 
 - Android package: `com.palhaziadev.awesomelist2`
 - Firebase project: `list-27ccf`
 - New Architecture (Fabric/TurboModules) is **enabled**
+- React Compiler experiment enabled (`"reactCompiler": true` in `app.json`)
 - EAS build profiles defined in `eas.json`: `development`, `preview`, `production`
+- Supabase env vars (`EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`) injected via EAS build profiles
 - After adding any native module, run `npm run native:build` and rebuild
 
 ### Pending
