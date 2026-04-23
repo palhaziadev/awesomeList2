@@ -94,6 +94,15 @@ npm run android:eas:pre    # preview build
 - Supabase env vars (`EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`) injected via EAS build profiles
 - After adding any native module, run `npm run native:build` and rebuild
 
+### Testing
+
+- Test files live in `__tests__/` at the repo root, mirroring the source structure
+  - e.g. `__tests__/app/(tabs)/index.test.tsx` tests `app/(tabs)/index.tsx`
+  - e.g. `__tests__/components/ItemListFilter.test.tsx` tests `components/ItemListFilter.tsx`
+- Always create new test files under `__tests__/`, never inside `app/` or `components/` (Metro would bundle them)
+- Use `@/` alias for imports in test files (e.g. `import HomeScreen from '@/app/(tabs)/index'`)
+- Mocks live in `__mocks__/` at the repo root (already contains `react-native-reanimated.js` and `react-native-svg.js`)
+
 ### Pending
 
 - Dark/light theme manual switcher (noted in README)

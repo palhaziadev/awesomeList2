@@ -2,7 +2,7 @@ import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import * as React from 'react';
 import { ActivityIndicator, Alert } from 'react-native';
 import { supabase } from '@/lib/supabase.config';
-import HomeScreen from './index';
+import HomeScreen from '@/app/(tabs)/index';
 
 jest.mock('@/lib/supabase.config', () => ({
   supabase: {
