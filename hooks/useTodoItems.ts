@@ -201,14 +201,15 @@ export function useTodoItems(listId: string) {
     const update: Record<string, unknown> = { created_at: now };
     if (isDone) update.is_done = false;
 
-    const previous = items;
-    setItems((prev) =>
-      prev.map((item) =>
+    let previousItems: TodoItem[] = [];
+    setItems((prev) => {
+      previousItems = prev;
+      return prev.map((item) =>
         item.id === listItemId
           ? { ...item, createdAt: now, ...(isDone ? { isDone: false } : {}) }
-          : item
-      )
-    );
+          : item,
+      );
+    });
 
     const { error } = await supabase
       .from("todo_list_items")
@@ -216,7 +217,7 @@ export function useTodoItems(listId: string) {
       .eq("id", listItemId);
 
     if (error) {
-      setItems(previous);
+      setItems(previousItems);
       Alert.alert("Error", "Failed to update item. Please try again.");
       return false;
     }
