@@ -88,7 +88,8 @@ export function useAutocomplete(
       }
 
       const { data: userData } = await supabase.auth.getUser();
-      const userId = userData.user?.id ?? '';
+      const userId = userData.user?.id;
+      if (!userId) return;
 
       const { error } = await supabase.from('todo_list_items').insert({
         list_id: listId,
