@@ -85,7 +85,7 @@ export default function ListScreen() {
     <SafeAreaView className="flex-1 p-4 gap-3">
       <ScreenHeader title={listName} />
       <View className="flex-row gap-2">
-        <DropdownMenu onOpenChange={(open) => { if (!open) setUserDismissed(true); }}>
+        <DropdownMenu className="flex-1" onOpenChange={(open) => { if (!open) setUserDismissed(true); }}>
           <DropdownMenuTrigger ref={triggerRef} className="flex-1">
             <Input
               className="flex-1"
