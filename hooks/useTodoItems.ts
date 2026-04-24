@@ -66,7 +66,11 @@ export function useTodoItems(listId: string) {
         setItems((prev) =>
           prev.map((item) =>
             item.id === record.id
-              ? { ...item, isDone: record.is_done ?? item.isDone }
+              ? {
+                  ...item,
+                  isDone: record.is_done ?? item.isDone,
+                  createdAt: record.created_at ?? item.createdAt,
+                }
               : item,
           ),
         );
@@ -192,5 +196,33 @@ export function useTodoItems(listId: string) {
     }
   }
 
-  return { items, isLoading, isSaving, addItem, removeItem, toggleDone };
+  async function selectExistingItem(listItemId: string, isDone: boolean): Promise<boolean> {
+    const now = new Date().toISOString();
+    const update: Record<string, unknown> = { created_at: now };
+    if (isDone) update.is_done = false;
+
+    const previous = items;
+    setItems((prev) =>
+      prev.map((item) =>
+        item.id === listItemId
+          ? { ...item, createdAt: now, ...(isDone ? { isDone: false } : {}) }
+          : item
+      )
+    );
+
+    const { error } = await supabase
+      .from("todo_list_items")
+      .update(update)
+      .eq("id", listItemId);
+
+    if (error) {
+      setItems(previous);
+      Alert.alert("Error", "Failed to update item. Please try again.");
+      return false;
+    }
+
+    return true;
+  }
+
+  return { items, isLoading, isSaving, addItem, removeItem, toggleDone, selectExistingItem };
 }
