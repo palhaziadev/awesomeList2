@@ -44,13 +44,16 @@ export function useAutocomplete(
       const userId = userData.user?.id;
       if (!userId) return;
 
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('todo_items')
         .select('id, name')
         .ilike('name', `%${query}%`)
         .eq('created_by', userId);
 
-      if (!data) return;
+      if (error || !data) {
+        setOtherSuggestions([]);
+        return;
+      }
 
       const currentNames = new Set(
         currentSuggestions.map((s) => s.name.toLowerCase())

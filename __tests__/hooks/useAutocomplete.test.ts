@@ -149,6 +149,40 @@ describe('debounced other-list query', () => {
     );
     expect(milkEntries).toHaveLength(1);
   });
+
+  it('clears otherSuggestions when the Supabase query returns an error', async () => {
+    // First, populate otherSuggestions with a successful query
+    mockEq.mockResolvedValueOnce({
+      data: [{ id: 'i9', name: 'Mild salsa' }],
+      error: null,
+    });
+
+    const { result, rerender } = renderHook(
+      ({ q }) => useAutocomplete(q, [], 'list1', mockOnSelectExisting),
+      { initialProps: { q: 'mi' } }
+    );
+
+    await act(async () => {
+      jest.advanceTimersByTime(300);
+      await Promise.resolve();
+    });
+
+    // Confirm other suggestions are populated
+    expect(result.current.suggestions).toHaveLength(1);
+
+    // Now return an error on the next query
+    mockEq.mockResolvedValueOnce({ data: null, error: { message: 'network error' } });
+
+    rerender({ q: 'mild' });
+
+    await act(async () => {
+      jest.advanceTimersByTime(300);
+      await Promise.resolve();
+    });
+
+    // otherSuggestions should be cleared
+    expect(result.current.suggestions).toHaveLength(0);
+  });
 });
 
 describe('maxSuggestions', () => {
