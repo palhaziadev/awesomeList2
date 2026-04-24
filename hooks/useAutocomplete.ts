@@ -1,6 +1,7 @@
 import { TodoItem } from '@/models/Todo';
 import { supabase } from '@/lib/supabase.config';
 import * as React from 'react';
+import { Alert } from 'react-native';
 
 export type AutocompleteSuggestion = {
   itemId: string;
@@ -79,9 +80,30 @@ export function useAutocomplete(
     return [...currentSlice, ...otherSuggestions.slice(0, remaining)];
   }, [currentSuggestions, otherSuggestions, maxSuggestions]);
 
-  async function selectSuggestion(_suggestion: AutocompleteSuggestion): Promise<void> {
-    // implemented in Task 4
-  }
+  const selectSuggestion = React.useCallback(
+    async (suggestion: AutocompleteSuggestion): Promise<void> => {
+      if (suggestion.source === 'current' && suggestion.listItemId) {
+        await onSelectExisting(suggestion.listItemId, suggestion.isDone ?? false);
+        return;
+      }
+
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id ?? '';
+
+      const { error } = await supabase.from('todo_list_items').insert({
+        list_id: listId,
+        item_id: suggestion.itemId,
+        created_by: userId,
+        created_at: new Date().toISOString(),
+        is_done: false,
+      });
+
+      if (error) {
+        Alert.alert('Error', 'Failed to add item. Please try again.');
+      }
+    },
+    [listId, onSelectExisting],
+  );
 
   return { suggestions, selectSuggestion };
 }

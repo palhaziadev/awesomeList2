@@ -1,6 +1,7 @@
 import { act, renderHook } from '@testing-library/react-native';
 import { useAutocomplete } from '@/hooks/useAutocomplete';
 import { TodoItem } from '@/models/Todo';
+import { Alert } from 'react-native';
 
 // Supabase mock — chained calls resolved lazily per test
 const mockGetUser = jest.fn();
@@ -33,6 +34,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockEq.mockResolvedValue({ data: [], error: null });
   mockGetUser.mockResolvedValue({ data: { user: { id: 'u1' } }, error: null });
+  jest.spyOn(Alert, 'alert').mockImplementation(() => {});
 });
 
 describe('in-memory filtering', () => {
@@ -223,5 +225,93 @@ describe('maxSuggestions', () => {
     expect(result.current.suggestions.filter((s) => s.source === 'other')).toHaveLength(1);
 
     jest.useRealTimers();
+  });
+});
+
+describe('selectSuggestion', () => {
+  it('calls onSelectExisting with listItemId and isDone=false for a pending current-list item', async () => {
+    mockOnSelectExisting.mockResolvedValue(true);
+    const { result } = renderHook(() =>
+      useAutocomplete('mi', mockItems, 'list1', mockOnSelectExisting)
+    );
+
+    await act(async () => {
+      await result.current.selectSuggestion({
+        itemId: 'i1',
+        listItemId: 'li1',
+        name: 'Milk',
+        isDone: false,
+        source: 'current',
+      });
+    });
+
+    expect(mockOnSelectExisting).toHaveBeenCalledWith('li1', false);
+    expect(mockFrom).not.toHaveBeenCalledWith('todo_list_items');
+  });
+
+  it('calls onSelectExisting with listItemId and isDone=true for a done current-list item', async () => {
+    mockOnSelectExisting.mockResolvedValue(true);
+    const { result } = renderHook(() =>
+      useAutocomplete('mi', mockItems, 'list1', mockOnSelectExisting)
+    );
+
+    await act(async () => {
+      await result.current.selectSuggestion({
+        itemId: 'i2',
+        listItemId: 'li2',
+        name: 'Millet bread',
+        isDone: true,
+        source: 'current',
+      });
+    });
+
+    expect(mockOnSelectExisting).toHaveBeenCalledWith('li2', true);
+  });
+
+  it('inserts into todo_list_items for an other-list item', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'u1' } }, error: null });
+    mockInsert.mockResolvedValue({ error: null });
+
+    const { result } = renderHook(() =>
+      useAutocomplete('sa', [], 'list1', mockOnSelectExisting)
+    );
+
+    await act(async () => {
+      await result.current.selectSuggestion({
+        itemId: 'i9',
+        name: 'Mild salsa',
+        source: 'other',
+      });
+    });
+
+    expect(mockFrom).toHaveBeenCalledWith('todo_list_items');
+    expect(mockInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        list_id: 'list1',
+        item_id: 'i9',
+        created_by: 'u1',
+        is_done: false,
+      })
+    );
+    expect(mockOnSelectExisting).not.toHaveBeenCalled();
+  });
+
+  it('shows an Alert when insert fails for an other-list item', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'u1' } }, error: null });
+    mockInsert.mockResolvedValue({ error: { message: 'insert failed' } });
+
+    const { result } = renderHook(() =>
+      useAutocomplete('sa', [], 'list1', mockOnSelectExisting)
+    );
+
+    await act(async () => {
+      await result.current.selectSuggestion({
+        itemId: 'i9',
+        name: 'Mild salsa',
+        source: 'other',
+      });
+    });
+
+    expect(Alert.alert).toHaveBeenCalledWith('Error', 'Failed to add item. Please try again.');
   });
 });
