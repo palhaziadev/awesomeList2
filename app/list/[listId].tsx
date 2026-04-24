@@ -1,14 +1,22 @@
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { TodoItemRow } from "@/components/TodoItemRow";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ItemListFilter } from "@/components/ItemListFilter";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Text } from "@/components/ui/text";
+import { AutocompleteSuggestion, useAutocomplete } from "@/hooks/useAutocomplete";
 import { useTodoItems } from "@/hooks/useTodoItems";
 import { useLocalSearchParams } from "expo-router";
 import * as React from "react";
 import { ActivityIndicator, ScrollView, View } from "react-native";
+import type { TriggerRef } from "@rn-primitives/dropdown-menu";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ListScreen() {
@@ -17,9 +25,24 @@ export default function ListScreen() {
     listName: string;
   }>();
 
-  const { items, isLoading, isSaving, addItem, removeItem, toggleDone } =
+  const { items, isLoading, isSaving, addItem, removeItem, toggleDone, selectExistingItem } =
     useTodoItems(listId);
   const [inputText, setInputText] = React.useState("");
+  const { suggestions, selectSuggestion } = useAutocomplete(
+    inputText,
+    items,
+    listId,
+    selectExistingItem
+  );
+  const triggerRef = React.useRef<TriggerRef>(null);
+  const shouldOpen = suggestions.length > 0 && inputText.length >= 2;
+  React.useEffect(() => {
+    if (shouldOpen) {
+      triggerRef.current?.open();
+    } else {
+      triggerRef.current?.close();
+    }
+  }, [shouldOpen]);
   const [grouping, setGrouping] = React.useState(true);
   const [dateOrder, setDateOrder] = React.useState<"asc" | "desc" | null>("desc");
   const [alphaOrder, setAlphaOrder] = React.useState<"asc" | "desc" | null>(null);
@@ -49,18 +72,34 @@ export default function ListScreen() {
     if (success) setInputText("");
   }
 
+  async function handleSelectSuggestion(suggestion: AutocompleteSuggestion) {
+    await selectSuggestion(suggestion);
+    setInputText("");
+  }
+
   return (
     <SafeAreaView className="flex-1 p-4 gap-3">
       <ScreenHeader title={listName} />
       <View className="flex-row gap-2">
-        <Input
-          className="flex-1"
-          placeholder="New item..."
-          value={inputText}
-          onChangeText={setInputText}
-          onSubmitEditing={() => inputText.trim() && handleAdd()}
-          returnKeyType="done"
-        />
+        <DropdownMenu>
+          <DropdownMenuTrigger ref={triggerRef} className="flex-1">
+            <Input
+              className="flex-1"
+              placeholder="New item..."
+              value={inputText}
+              onChangeText={setInputText}
+              onSubmitEditing={() => inputText.trim() && handleAdd()}
+              returnKeyType="done"
+            />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            {suggestions.map((s) => (
+              <DropdownMenuItem key={s.itemId} onPress={() => handleSelectSuggestion(s)}>
+                <Text>{s.name}</Text>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
         <Button disabled={!inputText.trim() || isSaving} onPress={handleAdd}>
           <Text>Add</Text>
         </Button>
