@@ -35,7 +35,8 @@ export default function ListScreen() {
     selectExistingItem
   );
   const triggerRef = React.useRef<TriggerRef>(null);
-  const shouldOpen = suggestions.length > 0 && inputText.length >= 2;
+  const [userDismissed, setUserDismissed] = React.useState(false);
+  const shouldOpen = suggestions.length > 0 && inputText.length >= 2 && !userDismissed;
   React.useEffect(() => {
     if (shouldOpen) {
       triggerRef.current?.open();
@@ -43,6 +44,9 @@ export default function ListScreen() {
       triggerRef.current?.close();
     }
   }, [shouldOpen]);
+  React.useEffect(() => {
+    setUserDismissed(false);
+  }, [inputText]);
   const [grouping, setGrouping] = React.useState(true);
   const [dateOrder, setDateOrder] = React.useState<"asc" | "desc" | null>("desc");
   const [alphaOrder, setAlphaOrder] = React.useState<"asc" | "desc" | null>(null);
@@ -81,7 +85,7 @@ export default function ListScreen() {
     <SafeAreaView className="flex-1 p-4 gap-3">
       <ScreenHeader title={listName} />
       <View className="flex-row gap-2">
-        <DropdownMenu>
+        <DropdownMenu onOpenChange={(open) => { if (!open) setUserDismissed(true); }}>
           <DropdownMenuTrigger ref={triggerRef} className="flex-1">
             <Input
               className="flex-1"
