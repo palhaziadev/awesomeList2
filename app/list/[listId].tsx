@@ -1,3 +1,5 @@
+import { EditItemDialog } from "@/components/EditItemDialog";
+import { ItemListFilter } from "@/components/ItemListFilter";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { TodoItemRow } from "@/components/TodoItemRow";
 import { Button } from "@/components/ui/button";
@@ -7,16 +9,20 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ItemListFilter } from "@/components/ItemListFilter";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Text } from "@/components/ui/text";
-import { AutocompleteSuggestion, useAutocomplete } from "@/hooks/useAutocomplete";
+import {
+  AutocompleteSuggestion,
+  useAutocomplete,
+} from "@/hooks/useAutocomplete";
+import { useShops } from "@/hooks/useShops";
 import { useTodoItems } from "@/hooks/useTodoItems";
+import { TodoItem } from "@/models/Todo";
+import type { TriggerRef } from "@rn-primitives/dropdown-menu";
 import { useLocalSearchParams } from "expo-router";
 import * as React from "react";
 import { ActivityIndicator, ScrollView, View } from "react-native";
-import type { TriggerRef } from "@rn-primitives/dropdown-menu";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ListScreen() {
@@ -25,18 +31,29 @@ export default function ListScreen() {
     listName: string;
   }>();
 
-  const { items, isLoading, isSaving, addItem, removeItem, toggleDone, selectExistingItem } =
-    useTodoItems(listId);
+  const {
+    items,
+    isLoading,
+    isSaving,
+    addItem,
+    removeItem,
+    toggleDone,
+    updateItem,
+    selectExistingItem,
+  } = useTodoItems(listId);
+  const { shops } = useShops();
+  const [selectedItem, setSelectedItem] = React.useState<TodoItem | null>(null);
   const [inputText, setInputText] = React.useState("");
   const { suggestions, selectSuggestion } = useAutocomplete(
     inputText,
     items,
     listId,
-    selectExistingItem
+    selectExistingItem,
   );
   const triggerRef = React.useRef<TriggerRef>(null);
   const [userDismissed, setUserDismissed] = React.useState(false);
-  const shouldOpen = suggestions.length > 0 && inputText.length >= 2 && !userDismissed;
+  const shouldOpen =
+    suggestions.length > 0 && inputText.length >= 2 && !userDismissed;
   React.useEffect(() => {
     if (shouldOpen) {
       triggerRef.current?.open();
@@ -48,14 +65,19 @@ export default function ListScreen() {
     setUserDismissed(false);
   }, [inputText]);
   const [grouping, setGrouping] = React.useState(true);
-  const [dateOrder, setDateOrder] = React.useState<"asc" | "desc" | null>("desc");
-  const [alphaOrder, setAlphaOrder] = React.useState<"asc" | "desc" | null>(null);
+  const [dateOrder, setDateOrder] = React.useState<"asc" | "desc" | null>(
+    "desc",
+  );
+  const [alphaOrder, setAlphaOrder] = React.useState<"asc" | "desc" | null>(
+    null,
+  );
 
   const sortedItems = React.useMemo(() => {
     let result = [...items];
     if (dateOrder) {
       result.sort((a, b) => {
-        const diff = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        const diff =
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
         return dateOrder === "asc" ? diff : -diff;
       });
     }
@@ -68,8 +90,14 @@ export default function ListScreen() {
     return result;
   }, [items, dateOrder, alphaOrder]);
 
-  const pendingItems = React.useMemo(() => sortedItems.filter((i) => !i.isDone), [sortedItems]);
-  const doneItems = React.useMemo(() => sortedItems.filter((i) => i.isDone), [sortedItems]);
+  const pendingItems = React.useMemo(
+    () => sortedItems.filter((i) => !i.isDone),
+    [sortedItems],
+  );
+  const doneItems = React.useMemo(
+    () => sortedItems.filter((i) => i.isDone),
+    [sortedItems],
+  );
 
   async function handleAdd() {
     const success = await addItem(inputText);
@@ -85,7 +113,12 @@ export default function ListScreen() {
     <SafeAreaView className="flex-1 p-4 gap-3">
       <ScreenHeader title={listName} />
       <View className="flex-row gap-2">
-        <DropdownMenu className="flex-1" onOpenChange={(open) => { if (!open) setUserDismissed(true); }}>
+        <DropdownMenu
+          className="flex-1"
+          onOpenChange={(open) => {
+            if (!open) setUserDismissed(true);
+          }}
+        >
           <DropdownMenuTrigger ref={triggerRef} className="flex-1">
             <Input
               className="flex-1"
@@ -98,7 +131,10 @@ export default function ListScreen() {
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             {suggestions.map((s) => (
-              <DropdownMenuItem key={s.itemId} onPress={() => handleSelectSuggestion(s)}>
+              <DropdownMenuItem
+                key={s.itemId}
+                onPress={() => handleSelectSuggestion(s)}
+              >
                 <Text>{s.name}</Text>
               </DropdownMenuItem>
             ))}
@@ -114,9 +150,15 @@ export default function ListScreen() {
           <Switch checked={grouping} onCheckedChange={setGrouping} />
           <ItemListFilter
             dateOrder={dateOrder}
-            onDateOrderChange={(order) => { setAlphaOrder(null); setDateOrder(order); }}
+            onDateOrderChange={(order) => {
+              setAlphaOrder(null);
+              setDateOrder(order);
+            }}
             alphaOrder={alphaOrder}
-            onAlphaOrderChange={(order) => { setDateOrder(null); setAlphaOrder(order); }}
+            onAlphaOrderChange={(order) => {
+              setDateOrder(null);
+              setAlphaOrder(order);
+            }}
           />
         </View>
       </View>
@@ -125,7 +167,13 @@ export default function ListScreen() {
         {grouping ? (
           <>
             {pendingItems.map((item) => (
-              <TodoItemRow key={item.id} item={item} onRemove={removeItem} onToggleDone={toggleDone} />
+              <TodoItemRow
+                key={item.id}
+                item={item}
+                onRemove={removeItem}
+                onToggleDone={toggleDone}
+                onPress={() => setSelectedItem(item)}
+              />
             ))}
             {pendingItems.length > 0 && doneItems.length > 0 && (
               <View className="flex-row items-center gap-2 my-1">
@@ -135,15 +183,36 @@ export default function ListScreen() {
               </View>
             )}
             {doneItems.map((item) => (
-              <TodoItemRow key={item.id} item={item} onRemove={removeItem} onToggleDone={toggleDone} />
+              <TodoItemRow
+                key={item.id}
+                item={item}
+                onRemove={removeItem}
+                onToggleDone={toggleDone}
+                onPress={() => setSelectedItem(item)}
+              />
             ))}
           </>
         ) : (
           sortedItems.map((item) => (
-            <TodoItemRow key={item.id} item={item} onRemove={removeItem} onToggleDone={toggleDone} />
+            <TodoItemRow
+              key={item.id}
+              item={item}
+              onRemove={removeItem}
+              onToggleDone={toggleDone}
+              onPress={() => setSelectedItem(item)}
+            />
           ))
         )}
       </ScrollView>
+      <EditItemDialog
+        item={selectedItem}
+        shops={shops}
+        onSave={(patch) => {
+          if (selectedItem) updateItem(selectedItem.id, patch);
+          setSelectedItem(null);
+        }}
+        onClose={() => setSelectedItem(null)}
+      />
     </SafeAreaView>
   );
 }

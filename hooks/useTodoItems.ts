@@ -16,7 +16,7 @@ export function useTodoItems(listId: string) {
     setIsLoading(true);
     const { data, error } = await supabase
       .from("todo_list_items")
-      .select("*, todo_items(name, translation)")
+      .select("*, todo_items(name, translation, translation_override)")
       .eq("list_id", listId);
 
     setIsLoading(false);
@@ -32,6 +32,7 @@ export function useTodoItems(listId: string) {
           row,
           row.todo_items?.name ?? "",
           row.todo_items?.translation ?? undefined,
+          row.todo_items?.translation_override ?? undefined,
         ),
       ),
     );
@@ -61,8 +62,17 @@ export function useTodoItems(listId: string) {
           ];
         });
       })
-      .on("broadcast", { event: "UPDATE" }, ({ payload }) => {
+      .on("broadcast", { event: "UPDATE" }, async ({ payload }) => {
         const record = payload.record;
+        let translationOverride: string | undefined = undefined;
+        if (record.item_id) {
+          const { data } = await supabase
+            .from("todo_items")
+            .select("translation_override")
+            .eq("id", record.item_id)
+            .single();
+          translationOverride = data?.translation_override ?? undefined;
+        }
         setItems((prev) =>
           prev.map((item) =>
             item.id === record.id
@@ -70,6 +80,8 @@ export function useTodoItems(listId: string) {
                   ...item,
                   isDone: record.is_done ?? item.isDone,
                   createdAt: record.created_at ?? item.createdAt,
+                  shopId: record.shop_id ?? item.shopId,
+                  translationOverride,
                 }
               : item,
           ),
@@ -196,7 +208,10 @@ export function useTodoItems(listId: string) {
     }
   }
 
-  async function selectExistingItem(listItemId: string, isDone: boolean): Promise<boolean> {
+  async function selectExistingItem(
+    listItemId: string,
+    isDone: boolean,
+  ): Promise<boolean> {
     const now = new Date().toISOString();
     const update: Record<string, unknown> = { created_at: now };
     if (isDone) update.is_done = false;
@@ -225,5 +240,63 @@ export function useTodoItems(listId: string) {
     return true;
   }
 
-  return { items, isLoading, isSaving, addItem, removeItem, toggleDone, selectExistingItem };
+  async function updateItem(
+    id: string,
+    patch: { translationOverride: string | null; shopId: string | null },
+  ): Promise<boolean> {
+    const item = items.find((i) => i.id === id);
+    if (!item) return false;
+
+    setItems((prev) =>
+      prev.map((i) =>
+        i.id === id
+          ? {
+              ...i,
+              translationOverride: patch.translationOverride ?? undefined,
+              shopId: patch.shopId ?? undefined,
+            }
+          : i,
+      ),
+    );
+
+    const [itemsResult, listItemsResult] = await Promise.all([
+      supabase
+        .from("todo_items")
+        .update({ translation_override: patch.translationOverride })
+        .eq("id", item.itemId),
+      supabase
+        .from("todo_list_items")
+        .update({ shop_id: patch.shopId })
+        .eq("id", id),
+    ]);
+
+    if (itemsResult.error || listItemsResult.error) {
+      setItems((prev) =>
+        prev.map((i) =>
+          i.id === id
+            ? {
+                ...i,
+                translationOverride: item.translationOverride,
+                shopId: item.shopId,
+              }
+            : i,
+        ),
+      );
+      Alert.alert("Error", "Failed to update item. Please try again.");
+      return false;
+    }
+
+    return true;
+  }
+
+  return {
+    items,
+    isLoading,
+    isSaving,
+    addItem,
+    removeItem,
+    toggleDone,
+    updateItem,
+    selectExistingItem,
+  };
 }
