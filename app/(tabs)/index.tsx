@@ -69,7 +69,7 @@ export default function HomeScreen() {
     if (!inputText.trim()) return;
     const now = new Date().toISOString();
     const newList: TodoList = {
-      listId: Date.now().toString(),
+      listId: "",
       listName: inputText.trim(),
       createdAt: now,
       owner: userData.user?.id ?? "",
@@ -78,13 +78,15 @@ export default function HomeScreen() {
     };
 
     setIsSaving(true);
-    // TODO select the added list from db and show it in the list instead of generating id on client
-    // select().single()
-    const { error } = await supabase.from("todo_list").insert({
-      list_name: newList.listName,
-      created_by: newList.createdBy,
-      created_at: newList.createdAt,
-    });
+    const { data: insertedList, error } = await supabase
+      .from("todo_list")
+      .insert({
+        list_name: newList.listName,
+        created_by: newList.createdBy,
+        created_at: newList.createdAt,
+      })
+      .select()
+      .single();
     setIsSaving(false);
 
     if (error) {
@@ -93,7 +95,7 @@ export default function HomeScreen() {
     }
 
     isAdding.current = true;
-    setLists((prev) => [newList, ...prev]);
+    setLists((prev) => [{ ...newList, listId: insertedList.id }, ...prev]);
     setInputText("");
   }
 
