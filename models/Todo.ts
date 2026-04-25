@@ -4,6 +4,7 @@ export type Item = {
   itemDescription?: string;
   translation?: string;
   translationOverride?: string;
+  shopId?: string;
   createdAt: string;
   createdBy: string;
   updatedAt?: string;
@@ -53,4 +54,9 @@ export type TodoList = {
   sharedWith?: ListSharedWith[];
   updatedAt?: string;
   updatedBy?: string;
+};
+
+export type Shop = {
+  shopId: string;
+  shopName: string;
 };
