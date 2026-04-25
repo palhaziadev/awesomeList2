@@ -51,6 +51,7 @@ export default function ListScreen() {
     selectExistingItem,
   );
   const triggerRef = React.useRef<TriggerRef>(null);
+  const [triggerWidth, setTriggerWidth] = React.useState<number | undefined>(undefined);
   const [userDismissed, setUserDismissed] = React.useState(false);
   const shouldOpen =
     suggestions.length > 0 && inputText.length >= 2 && !userDismissed;
@@ -119,7 +120,11 @@ export default function ListScreen() {
             if (!open) setUserDismissed(true);
           }}
         >
-          <DropdownMenuTrigger ref={triggerRef} className="flex-1">
+          <DropdownMenuTrigger
+            ref={triggerRef}
+            className="flex-1"
+            onLayout={(e) => setTriggerWidth(e.nativeEvent.layout.width)}
+          >
             <Input
               className="flex-1"
               placeholder="New item..."
@@ -129,7 +134,7 @@ export default function ListScreen() {
               returnKeyType="done"
             />
           </DropdownMenuTrigger>
-          <DropdownMenuContent>
+          <DropdownMenuContent style={triggerWidth ? { width: triggerWidth } : undefined}>
             {suggestions.map((s) => (
               <DropdownMenuItem
                 key={s.itemId}
