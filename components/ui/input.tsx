@@ -21,6 +21,7 @@ function Input({ className, ...props }: TextInputProps & React.RefAttributes<Tex
         }),
         className
       )}
+      autoCorrect={false}
       {...props}
     />
   );

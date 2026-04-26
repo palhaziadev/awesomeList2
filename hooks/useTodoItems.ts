@@ -240,6 +240,39 @@ export function useTodoItems(listId: string) {
     return true;
   }
 
+  async function renameItem(id: string, newName: string): Promise<boolean> {
+    const item = items.find((i) => i.id === id);
+    if (!item) return false;
+
+    const trimmed = newName.trim();
+    if (!trimmed || trimmed === item.itemName) return false;
+
+    const { translatedText, error: translateError } = await translateText(trimmed);
+    if (translateError) Alert.alert("Translation error", translateError);
+
+    const previousItems = items;
+    setItems((prev) =>
+      prev.map((i) =>
+        i.id === id
+          ? { ...i, itemName: trimmed, translation: translatedText ?? undefined, translationOverride: undefined }
+          : i,
+      ),
+    );
+
+    const { error } = await supabase
+      .from("todo_items")
+      .update({ name: trimmed, translation: translatedText ?? null, translation_override: null })
+      .eq("id", item.itemId);
+
+    if (error) {
+      setItems(previousItems);
+      Alert.alert("Error", "Failed to rename item. Please try again.");
+      return false;
+    }
+
+    return true;
+  }
+
   async function updateItem(
     id: string,
     patch: { translationOverride: string | null; shopId: string | null },
@@ -297,6 +330,7 @@ export function useTodoItems(listId: string) {
     removeItem,
     toggleDone,
     updateItem,
+    renameItem,
     selectExistingItem,
   };
 }

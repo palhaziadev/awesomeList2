@@ -41,10 +41,12 @@ export default function ListScreen() {
     removeItem,
     toggleDone,
     updateItem,
+    renameItem,
     selectExistingItem,
   } = useTodoItems(listId);
   const { shops } = useShops();
   const [selectedItem, setSelectedItem] = React.useState<TodoItem | null>(null);
+  const liveSelectedItem = selectedItem ? (items.find((i) => i.id === selectedItem.id) ?? selectedItem) : null;
   const [inputText, setInputText] = React.useState("");
   const { suggestions, selectSuggestion } = useAutocomplete(
     inputText,
@@ -279,11 +281,14 @@ export default function ListScreen() {
         )}
       </ScrollView>
       <EditItemDialog
-        item={selectedItem}
+        item={liveSelectedItem}
         shops={shops}
         onSave={(patch) => {
           if (selectedItem) updateItem(selectedItem.id, patch);
           setSelectedItem(null);
+        }}
+        onRename={(newName) => {
+          if (selectedItem) renameItem(selectedItem.id, newName);
         }}
         onClose={() => setSelectedItem(null)}
       />

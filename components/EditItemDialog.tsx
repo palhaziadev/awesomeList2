@@ -23,12 +23,14 @@ type Props = {
   item: TodoItem | null;
   shops: Shop[];
   onSave: (patch: { translationOverride: string | null; shopId: string | null }) => void;
+  onRename: (newName: string) => void;
   onClose: () => void;
 };
 
-export function EditItemDialog({ item, shops, onSave, onClose }: Props) {
+export function EditItemDialog({ item, shops, onSave, onRename, onClose }: Props) {
   const { width } = useWindowDimensions();
   const [dropdownWidth, setDropdownWidth] = React.useState(0);
+  const [nameText, setNameText] = React.useState(item?.itemName ?? "");
   const [overrideText, setOverrideText] = React.useState(
     item?.translationOverride ?? "",
   );
@@ -37,6 +39,7 @@ export function EditItemDialog({ item, shops, onSave, onClose }: Props) {
   );
 
   React.useEffect(() => {
+    setNameText(item?.itemName ?? "");
     setOverrideText(item?.translationOverride ?? "");
     setSelectedShopId(item?.shopId ?? null);
   }, [item?.id]);
@@ -59,9 +62,20 @@ export function EditItemDialog({ item, shops, onSave, onClose }: Props) {
         </DialogHeader>
 
         <View className="gap-1">
-          <Text className="text-xs text-muted-foreground uppercase tracking-wide">Name</Text>
-          <View className="rounded-md border border-border bg-muted px-3 py-2">
-            <Text className="text-sm text-muted-foreground">{item?.itemName}</Text>
+          <Text className="text-xs text-foreground uppercase tracking-wide">Name</Text>
+          <View className="flex-row gap-2 items-center">
+            <Input
+              className="flex-1"
+              value={nameText}
+              onChangeText={setNameText}
+              placeholder="Item name..."
+            />
+            <Button
+              onPress={() => { onRename(nameText); }}
+              disabled={!nameText.trim() || nameText.trim() === item?.itemName}
+            >
+              <Text>Add</Text>
+            </Button>
           </View>
         </View>
 
