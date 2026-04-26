@@ -14,9 +14,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
+import { SHOP_COLORS } from "@/lib/constants";
 import { Shop, TodoItem } from "@/models/Todo";
 import * as React from "react";
-import { View } from "react-native";
+import { useWindowDimensions, View } from "react-native";
 
 type Props = {
   item: TodoItem | null;
@@ -26,6 +27,8 @@ type Props = {
 };
 
 export function EditItemDialog({ item, shops, onSave, onClose }: Props) {
+  const { width } = useWindowDimensions();
+  const [dropdownWidth, setDropdownWidth] = React.useState(0);
   const [overrideText, setOverrideText] = React.useState(
     item?.translationOverride ?? "",
   );
@@ -50,7 +53,7 @@ export function EditItemDialog({ item, shops, onSave, onClose }: Props) {
 
   return (
     <Dialog open={item !== null} onOpenChange={(open: boolean) => { if (!open) onClose(); }}>
-      <DialogContent>
+      <DialogContent style={{ width: width - 32 }}>
         <DialogHeader>
           <DialogTitle>Edit Item</DialogTitle>
         </DialogHeader>
@@ -82,20 +85,37 @@ export function EditItemDialog({ item, shops, onSave, onClose }: Props) {
           <Text className="text-xs text-foreground uppercase tracking-wide">Shop</Text>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="justify-between">
+              <Button
+                variant="outline"
+                className="w-full justify-between"
+                onLayout={(e) => setDropdownWidth(e.nativeEvent.layout.width)}
+              >
                 <Text>{selectedShop?.shopName ?? "None"}</Text>
+                {selectedShop && (
+                  <View
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: SHOP_COLORS[selectedShop.shopId] }}
+                  />
+                )}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onPress={() => setSelectedShopId(null)}>
+            <DropdownMenuContent style={{ width: dropdownWidth }}>
+              <DropdownMenuItem onPress={() => setSelectedShopId(null)} className="justify-between">
                 <Text>None</Text>
               </DropdownMenuItem>
               {shops.map((shop) => (
                 <DropdownMenuItem
                   key={shop.shopId}
                   onPress={() => setSelectedShopId(shop.shopId)}
+                  className="justify-between"
                 >
                   <Text>{shop.shopName}</Text>
+                  {SHOP_COLORS[shop.shopId] && (
+                    <View
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: SHOP_COLORS[shop.shopId] }}
+                    />
+                  )}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
