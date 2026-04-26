@@ -80,7 +80,7 @@ export function useTodoItems(listId: string) {
                   ...item,
                   isDone: record.is_done ?? item.isDone,
                   createdAt: record.created_at ?? item.createdAt,
-                  shopId: record.shop_id ?? item.shopId,
+                  shopId: record.shop_id != null ? String(record.shop_id) : item.shopId,
                   translationOverride,
                 }
               : item,
