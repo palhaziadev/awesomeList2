@@ -51,7 +51,7 @@ Join our community of developers creating universal apps.
 
 ## Todo
 
-- [ ] Add autocomplete for add items input
+- [x] Add autocomplete for add items input
 - [x] Add different ordering options
 - [ ] Add pull+refresh to lists
 - [x] Add translation for items
@@ -61,7 +61,11 @@ Join our community of developers creating universal apps.
 - [ ] Add private lists
 - [ ] Add share list
 - [ ] Try generate types from supabase
-- [ ] Try superpowers
+- [x] Try superpowers
 - [x] add unit testing
 - [x] add test coverage report
 - [ ] add e2e testing https://maestro.dev/
+- [ ] show colors on shop dropdown items
+- [ ] add modify item name
+- [ ] save user settings
+- [ ] create login page
