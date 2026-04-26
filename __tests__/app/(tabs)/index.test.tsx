@@ -31,11 +31,13 @@ const sampleRows = [
 
 function setupMocks(
   fetchResult: { data: typeof sampleRows | null; error: { message: string } | null },
-  insertResult: { error: { message: string } | null } = { error: null },
+  insertResult: { data: { id: string } | null; error: { message: string } | null } = { data: { id: 'new-id' }, error: null },
 ) {
   const order = jest.fn().mockResolvedValue(fetchResult);
   const select = jest.fn().mockReturnValue({ order });
-  const insert = jest.fn().mockResolvedValue(insertResult);
+  const single = jest.fn().mockResolvedValue(insertResult);
+  const insertSelect = jest.fn().mockReturnValue({ single });
+  const insert = jest.fn().mockReturnValue({ select: insertSelect });
   mockFrom.mockReturnValue({ select, insert });
   return { order, select, insert };
 }
@@ -131,7 +133,7 @@ describe('HomeScreen', () => {
   });
 
   it('shows alert when insert fails', async () => {
-    setupMocks({ data: [], error: null }, { error: { message: 'Insert failed' } });
+    setupMocks({ data: [], error: null }, { data: null, error: { message: 'Insert failed' } });
 
     const { getByPlaceholderText, getByText } = render(<HomeScreen />);
     await waitFor(() => {});
