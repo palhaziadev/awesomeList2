@@ -102,6 +102,19 @@ export default function ListScreen() {
     [sortedItems],
   );
 
+  const pendingShopGroups = React.useMemo(
+    () => (groupByShop ? buildShopGroups(pendingItems, shops) : []),
+    [groupByShop, pendingItems, shops],
+  );
+  const doneShopGroups = React.useMemo(
+    () => (groupByShop ? buildShopGroups(doneItems, shops) : []),
+    [groupByShop, doneItems, shops],
+  );
+  const allShopGroups = React.useMemo(
+    () => (groupByShop ? buildShopGroups(sortedItems, shops) : []),
+    [groupByShop, sortedItems, shops],
+  );
+
   async function handleAdd() {
     const success = await addItem(inputText);
     if (success) setInputText("");
@@ -176,8 +189,8 @@ export default function ListScreen() {
         {groupByShop ? (
           grouping ? (
             <>
-              {buildShopGroups(pendingItems, shops).map((group) => (
-                <React.Fragment key={group.shopId ?? "__other__"}>
+              {pendingShopGroups.map((group) => (
+                <React.Fragment key={`pending-${group.shopId ?? "__other__"}`}>
                   <Text className="text-xs text-muted-foreground mt-1">
                     {group.shopName}
                   </Text>
@@ -199,8 +212,8 @@ export default function ListScreen() {
                   <View className="flex-1 h-px bg-border" />
                 </View>
               )}
-              {buildShopGroups(doneItems, shops).map((group) => (
-                <React.Fragment key={group.shopId ?? "__other__"}>
+              {doneShopGroups.map((group) => (
+                <React.Fragment key={`done-${group.shopId ?? "__other__"}`}>
                   <Text className="text-xs text-muted-foreground mt-1">
                     {group.shopName}
                   </Text>
@@ -218,7 +231,7 @@ export default function ListScreen() {
             </>
           ) : (
             <>
-              {buildShopGroups(sortedItems, shops).map((group) => (
+              {allShopGroups.map((group) => (
                 <React.Fragment key={group.shopId ?? "__other__"}>
                   <Text className="text-xs text-muted-foreground mt-1">
                     {group.shopName}
