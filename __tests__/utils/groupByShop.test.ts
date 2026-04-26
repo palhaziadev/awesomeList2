@@ -66,4 +66,11 @@ describe('buildShopGroups', () => {
     expect(result).toHaveLength(1);
     expect(result[0]).toMatchObject({ shopId: null, shopName: 'Other' });
   });
+
+  it('puts items with empty string shopId into Other', () => {
+    const items = [makeItem({ id: 'a', shopId: '' })];
+    const result = buildShopGroups(items, shops);
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({ shopId: null, shopName: 'Other' });
+  });
 });
