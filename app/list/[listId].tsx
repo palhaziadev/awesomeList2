@@ -20,12 +20,57 @@ import { useListSettings } from "@/hooks/useListSettings";
 import { useShops } from "@/hooks/useShops";
 import { useTodoItems } from "@/hooks/useTodoItems";
 import { TodoItem } from "@/models/Todo";
-import { buildShopGroups } from "@/utils/groupByShop";
+import { ShopGroup, buildShopGroups } from "@/utils/groupByShop";
 import type { TriggerRef } from "@rn-primitives/dropdown-menu";
 import { useLocalSearchParams } from "expo-router";
 import * as React from "react";
 import { ActivityIndicator, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+function DoneDivider() {
+  return (
+    <View className="flex-row items-center gap-2 my-1">
+      <View className="flex-1 h-px bg-border" />
+      <Text className="text-xs text-muted-foreground">Done</Text>
+      <View className="flex-1 h-px bg-border" />
+    </View>
+  );
+}
+
+type ShopGroupSectionProps = {
+  groups: ShopGroup[];
+  onRemove: (id: string) => void;
+  onToggleDone: (id: string, isDone: boolean) => void;
+  onPress: (item: TodoItem) => void;
+};
+
+const ShopGroupSection = React.memo(function ShopGroupSection({
+  groups,
+  onRemove,
+  onToggleDone,
+  onPress,
+}: ShopGroupSectionProps) {
+  return (
+    <>
+      {groups.map((group) => (
+        <React.Fragment key={group.shopId ?? "__other__"}>
+          <Text className="text-xs text-muted-foreground mt-1">
+            {group.shopName}
+          </Text>
+          {group.items.map((item) => (
+            <TodoItemRow
+              key={item.id}
+              item={item}
+              onRemove={onRemove}
+              onToggleDone={onToggleDone}
+              onPress={onPress}
+            />
+          ))}
+        </React.Fragment>
+      ))}
+    </>
+  );
+});
 
 export default function ListScreen() {
   const { listId, listName } = useLocalSearchParams<{
@@ -46,7 +91,10 @@ export default function ListScreen() {
   } = useTodoItems(listId);
   const { shops } = useShops();
   const [selectedItem, setSelectedItem] = React.useState<TodoItem | null>(null);
-  const liveSelectedItem = selectedItem ? (items.find((i) => i.id === selectedItem.id) ?? selectedItem) : null;
+  const liveSelectedItem = React.useMemo(
+    () => selectedItem ? (items.find((i) => i.id === selectedItem.id) ?? selectedItem) : null,
+    [items, selectedItem],
+  );
   const [inputText, setInputText] = React.useState("");
   const { suggestions, selectSuggestion } = useAutocomplete(
     inputText,
@@ -112,15 +160,20 @@ export default function ListScreen() {
     [groupByShop, sortedItems, shops],
   );
 
-  async function handleAdd() {
+  const handleItemPress = React.useCallback((item: TodoItem) => {
+    setSelectedItem(item);
+  }, []);
+
+  const handleAdd = React.useCallback(async () => {
+    if (!inputText.trim()) return;
     const success = await addItem(inputText);
     if (success) setInputText("");
-  }
+  }, [addItem, inputText]);
 
-  async function handleSelectSuggestion(suggestion: AutocompleteSuggestion) {
+  const handleSelectSuggestion = React.useCallback(async (suggestion: AutocompleteSuggestion) => {
     await selectSuggestion(suggestion);
     setInputText("");
-  }
+  }, [selectSuggestion]);
 
   return (
     <SafeAreaView className="flex-1 p-4 gap-3">
@@ -142,7 +195,7 @@ export default function ListScreen() {
               placeholder="New item..."
               value={inputText}
               onChangeText={setInputText}
-              onSubmitEditing={() => inputText.trim() && handleAdd()}
+              onSubmitEditing={handleAdd}
               returnKeyType="done"
             />
           </DropdownMenuTrigger>
@@ -180,65 +233,27 @@ export default function ListScreen() {
         {groupByShop ? (
           groupbyIsDone ? (
             <>
-              {pendingShopGroups.map((group) => (
-                <React.Fragment key={`pending-${group.shopId ?? "__other__"}`}>
-                  <Text className="text-xs text-muted-foreground mt-1">
-                    {group.shopName}
-                  </Text>
-                  {group.items.map((item) => (
-                    <TodoItemRow
-                      key={item.id}
-                      item={item}
-                      onRemove={removeItem}
-                      onToggleDone={toggleDone}
-                      onPress={() => setSelectedItem(item)}
-                    />
-                  ))}
-                </React.Fragment>
-              ))}
-              {pendingItems.length > 0 && doneItems.length > 0 && (
-                <View className="flex-row items-center gap-2 my-1">
-                  <View className="flex-1 h-px bg-border" />
-                  <Text className="text-xs text-muted-foreground">Done</Text>
-                  <View className="flex-1 h-px bg-border" />
-                </View>
-              )}
-              {doneShopGroups.map((group) => (
-                <React.Fragment key={`done-${group.shopId ?? "__other__"}`}>
-                  <Text className="text-xs text-muted-foreground mt-1">
-                    {group.shopName}
-                  </Text>
-                  {group.items.map((item) => (
-                    <TodoItemRow
-                      key={item.id}
-                      item={item}
-                      onRemove={removeItem}
-                      onToggleDone={toggleDone}
-                      onPress={() => setSelectedItem(item)}
-                    />
-                  ))}
-                </React.Fragment>
-              ))}
+              <ShopGroupSection
+                groups={pendingShopGroups}
+                onRemove={removeItem}
+                onToggleDone={toggleDone}
+                onPress={handleItemPress}
+              />
+              {pendingItems.length > 0 && doneItems.length > 0 && <DoneDivider />}
+              <ShopGroupSection
+                groups={doneShopGroups}
+                onRemove={removeItem}
+                onToggleDone={toggleDone}
+                onPress={handleItemPress}
+              />
             </>
           ) : (
-            <>
-              {allShopGroups.map((group) => (
-                <React.Fragment key={group.shopId ?? "__other__"}>
-                  <Text className="text-xs text-muted-foreground mt-1">
-                    {group.shopName}
-                  </Text>
-                  {group.items.map((item) => (
-                    <TodoItemRow
-                      key={item.id}
-                      item={item}
-                      onRemove={removeItem}
-                      onToggleDone={toggleDone}
-                      onPress={() => setSelectedItem(item)}
-                    />
-                  ))}
-                </React.Fragment>
-              ))}
-            </>
+            <ShopGroupSection
+              groups={allShopGroups}
+              onRemove={removeItem}
+              onToggleDone={toggleDone}
+              onPress={handleItemPress}
+            />
           )
         ) : groupbyIsDone ? (
           <>
@@ -248,23 +263,17 @@ export default function ListScreen() {
                 item={item}
                 onRemove={removeItem}
                 onToggleDone={toggleDone}
-                onPress={() => setSelectedItem(item)}
+                onPress={handleItemPress}
               />
             ))}
-            {pendingItems.length > 0 && doneItems.length > 0 && (
-              <View className="flex-row items-center gap-2 my-1">
-                <View className="flex-1 h-px bg-border" />
-                <Text className="text-xs text-muted-foreground">Done</Text>
-                <View className="flex-1 h-px bg-border" />
-              </View>
-            )}
+            {pendingItems.length > 0 && doneItems.length > 0 && <DoneDivider />}
             {doneItems.map((item) => (
               <TodoItemRow
                 key={item.id}
                 item={item}
                 onRemove={removeItem}
                 onToggleDone={toggleDone}
-                onPress={() => setSelectedItem(item)}
+                onPress={handleItemPress}
               />
             ))}
           </>
@@ -275,7 +284,7 @@ export default function ListScreen() {
               item={item}
               onRemove={removeItem}
               onToggleDone={toggleDone}
-              onPress={() => setSelectedItem(item)}
+              onPress={handleItemPress}
             />
           ))
         )}

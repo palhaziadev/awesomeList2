@@ -74,28 +74,28 @@ const sampleShops: Shop[] = [
 describe('EditItemDialog', () => {
   it('does not render when item is null', () => {
     const { queryByTestId } = render(
-      <EditItemDialog item={null} shops={[]} onSave={jest.fn()} onClose={jest.fn()} />,
+      <EditItemDialog item={null} shops={[]} onSave={jest.fn()} onRename={jest.fn()} onClose={jest.fn()} />,
     );
     expect(queryByTestId('dialog')).toBeNull();
   });
 
   it('renders when item is provided', () => {
     const { getByTestId } = render(
-      <EditItemDialog item={sampleItem} shops={[]} onSave={jest.fn()} onClose={jest.fn()} />,
+      <EditItemDialog item={sampleItem} shops={[]} onSave={jest.fn()} onRename={jest.fn()} onClose={jest.fn()} />,
     );
     expect(getByTestId('dialog')).toBeTruthy();
   });
 
   it('shows item name', () => {
-    const { getByText } = render(
-      <EditItemDialog item={sampleItem} shops={[]} onSave={jest.fn()} onClose={jest.fn()} />,
+    const { getByDisplayValue } = render(
+      <EditItemDialog item={sampleItem} shops={[]} onSave={jest.fn()} onRename={jest.fn()} onClose={jest.fn()} />,
     );
-    expect(getByText('Apple')).toBeTruthy();
+    expect(getByDisplayValue('Apple')).toBeTruthy();
   });
 
   it('shows translation', () => {
     const { getByText } = render(
-      <EditItemDialog item={sampleItem} shops={[]} onSave={jest.fn()} onClose={jest.fn()} />,
+      <EditItemDialog item={sampleItem} shops={[]} onSave={jest.fn()} onRename={jest.fn()} onClose={jest.fn()} />,
     );
     expect(getByText('Manzana')).toBeTruthy();
   });
@@ -103,7 +103,7 @@ describe('EditItemDialog', () => {
   it('shows existing translationOverride in input', () => {
     const item = { ...sampleItem, translationOverride: 'Manzana verde' };
     const { getByDisplayValue } = render(
-      <EditItemDialog item={item} shops={[]} onSave={jest.fn()} onClose={jest.fn()} />,
+      <EditItemDialog item={item} shops={[]} onSave={jest.fn()} onRename={jest.fn()} onClose={jest.fn()} />,
     );
     expect(getByDisplayValue('Manzana verde')).toBeTruthy();
   });
@@ -112,7 +112,7 @@ describe('EditItemDialog', () => {
     const onSave = jest.fn();
     const onClose = jest.fn();
     const { getByText } = render(
-      <EditItemDialog item={sampleItem} shops={[]} onSave={onSave} onClose={onClose} />,
+      <EditItemDialog item={sampleItem} shops={[]} onSave={onSave} onRename={jest.fn()} onClose={onClose} />,
     );
     fireEvent.press(getByText('Cancel'));
     expect(onClose).toHaveBeenCalledTimes(1);
@@ -123,7 +123,7 @@ describe('EditItemDialog', () => {
     const onSave = jest.fn();
     const onClose = jest.fn();
     const { getByText, getByPlaceholderText } = render(
-      <EditItemDialog item={sampleItem} shops={[]} onSave={onSave} onClose={onClose} />,
+      <EditItemDialog item={sampleItem} shops={[]} onSave={onSave} onRename={jest.fn()} onClose={onClose} />,
     );
     fireEvent.changeText(getByPlaceholderText('Override translation...'), 'Custom');
     fireEvent.press(getByText('Save'));
@@ -134,7 +134,7 @@ describe('EditItemDialog', () => {
   it('Save coerces empty override text to null', () => {
     const onSave = jest.fn();
     const { getByText } = render(
-      <EditItemDialog item={sampleItem} shops={[]} onSave={onSave} onClose={jest.fn()} />,
+      <EditItemDialog item={sampleItem} shops={[]} onSave={onSave} onRename={jest.fn()} onClose={jest.fn()} />,
     );
     fireEvent.press(getByText('Save'));
     expect(onSave).toHaveBeenCalledWith({ translationOverride: null, shopId: null });
@@ -142,7 +142,7 @@ describe('EditItemDialog', () => {
 
   it('renders shop options', () => {
     const { getByText } = render(
-      <EditItemDialog item={sampleItem} shops={sampleShops} onSave={jest.fn()} onClose={jest.fn()} />,
+      <EditItemDialog item={sampleItem} shops={sampleShops} onSave={jest.fn()} onRename={jest.fn()} onClose={jest.fn()} />,
     );
     expect(getByText('Lidl')).toBeTruthy();
     expect(getByText('Aldi')).toBeTruthy();
@@ -151,7 +151,7 @@ describe('EditItemDialog', () => {
   it('selecting a shop updates selectedShopId passed to Save', () => {
     const onSave = jest.fn();
     const { getByText } = render(
-      <EditItemDialog item={sampleItem} shops={sampleShops} onSave={onSave} onClose={jest.fn()} />,
+      <EditItemDialog item={sampleItem} shops={sampleShops} onSave={onSave} onRename={jest.fn()} onClose={jest.fn()} />,
     );
     fireEvent.press(getByText('Lidl'));
     fireEvent.press(getByText('Save'));
@@ -162,7 +162,7 @@ describe('EditItemDialog', () => {
     const onSave = jest.fn();
     const item = { ...sampleItem, shopId: 'shop-1' };
     const { getByText, getAllByText } = render(
-      <EditItemDialog item={item} shops={sampleShops} onSave={onSave} onClose={jest.fn()} />,
+      <EditItemDialog item={item} shops={sampleShops} onSave={onSave} onRename={jest.fn()} onClose={jest.fn()} />,
     );
     fireEvent.press(getAllByText('None')[0]);
     fireEvent.press(getByText('Save'));
@@ -176,6 +176,7 @@ describe('EditItemDialog', () => {
         item={{ ...sampleItem, translationOverride: 'First' }}
         shops={[]}
         onSave={onSave}
+        onRename={jest.fn()}
         onClose={jest.fn()}
       />,
     );
@@ -186,6 +187,7 @@ describe('EditItemDialog', () => {
         item={{ ...sampleItem, id: 'list-item-2', translationOverride: 'Second' }}
         shops={[]}
         onSave={onSave}
+        onRename={jest.fn()}
         onClose={jest.fn()}
       />,
     );

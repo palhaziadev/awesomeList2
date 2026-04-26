@@ -102,9 +102,17 @@ export default function HomeScreen() {
     setInputText("");
   }
 
-  function handleRemove(listId: string) {
+  async function handleRemove(listId: string) {
     isAdding.current = false;
+    const removed = lists.find((l) => l.listId === listId);
     setLists((prev) => prev.filter((l) => l.listId !== listId));
+    const { error } = await supabase.from("todo_list").delete().eq("id", listId);
+    if (error) {
+      Alert.alert("Error", error.message);
+      if (removed) {
+        setLists((prev) => [...prev, removed].sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
+      }
+    }
   }
 
   return (

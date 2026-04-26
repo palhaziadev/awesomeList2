@@ -5,6 +5,7 @@ import { SHOP_COLORS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { TodoItem } from "@/models/Todo";
 import { X } from "lucide-react-native";
+import * as React from "react";
 import { Pressable, View } from "react-native";
 import Animated, {
   LinearTransition,
@@ -16,12 +17,20 @@ type Props = {
   item: TodoItem;
   onRemove: (id: string) => void;
   onToggleDone: (id: string, isDone: boolean) => void;
-  onPress: () => void;
+  onPress: (item: TodoItem) => void;
 };
 
-export function TodoItemRow({ item, onRemove, onToggleDone, onPress }: Props) {
+export const TodoItemRow = React.memo(function TodoItemRow({ item, onRemove, onToggleDone, onPress }: Props) {
   const displayTranslation = item.translationOverride ?? item.translation;
   const shopColor = item.shopId ? SHOP_COLORS[item.shopId] : undefined;
+
+  const handleRemove = React.useCallback(() => onRemove(item.id), [onRemove, item.id]);
+  const handlePress = React.useCallback(() => onPress(item), [onPress, item]);
+  const handleToggleDone = React.useCallback(
+    (checked: boolean) => onToggleDone(item.id, !!checked),
+    [onToggleDone, item.id],
+  );
+
   return (
     <Animated.View
       entering={SlideInLeft.delay(300)}
@@ -31,9 +40,9 @@ export function TodoItemRow({ item, onRemove, onToggleDone, onPress }: Props) {
       <View className="flex-row items-center border border-border rounded-md p-3 bg-background gap-3 overflow-hidden">
         <Checkbox
           checked={item.isDone ?? false}
-          onCheckedChange={(checked) => onToggleDone(item.id, !!checked)}
+          onCheckedChange={handleToggleDone}
         />
-        <Pressable className="flex-1" onPress={onPress}>
+        <Pressable className="flex-1" onPress={handlePress}>
           <Text
             className={cn(
               "text-sm font-medium",
@@ -55,11 +64,11 @@ export function TodoItemRow({ item, onRemove, onToggleDone, onPress }: Props) {
               style={{ backgroundColor: shopColor }}
             />
           )}
-          <Button variant="ghost" size="icon" onPress={() => onRemove(item.id)}>
+          <Button variant="ghost" size="icon" onPress={handleRemove}>
             <X size={16} className="text-muted-foreground" />
           </Button>
         </View>
       </View>
     </Animated.View>
   );
-}
+});

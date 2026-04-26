@@ -11,6 +11,8 @@ export function useTodoItems(listId: string) {
   const [isLoading, setIsLoading] = React.useState(true);
   const [isSaving, setIsSaving] = React.useState(false);
   const channelCleanupRef = React.useRef<(() => void) | undefined>(undefined);
+  const itemsRef = React.useRef(items);
+  itemsRef.current = items;
 
   const fetchItems = React.useCallback(async () => {
     setIsLoading(true);
@@ -109,7 +111,7 @@ export function useTodoItems(listId: string) {
     }, [fetchItems, setupBroadcast]),
   );
 
-  async function addItem(text: string): Promise<boolean> {
+  const addItem = React.useCallback(async (text: string): Promise<boolean> => {
     const trimmed = text.trim();
     if (!trimmed) return false;
 
@@ -119,8 +121,7 @@ export function useTodoItems(listId: string) {
       return false;
     }
 
-    const { translatedText, error: translateError } =
-      await translateText(trimmed);
+    const { translatedText, error: translateError } = await translateText(trimmed);
     if (translateError) Alert.alert("Translation error", translateError);
 
     const translation: string | undefined = translatedText ?? undefined;
@@ -167,22 +168,22 @@ export function useTodoItems(listId: string) {
     } finally {
       setIsSaving(false);
     }
-  }
+  }, [listId]);
 
-  async function removeItem(id: string) {
-    const previous = items;
+  const removeItem = React.useCallback(async (id: string) => {
+    const snapshot = itemsRef.current;
     setItems((prev) => prev.filter((i) => i.id !== id));
     const { error } = await supabase
       .from("todo_list_items")
       .delete()
       .eq("id", id);
     if (error) {
-      setItems(previous);
+      setItems(snapshot);
       Alert.alert("Error", "Failed to remove item. Please try again.");
     }
-  }
+  }, []);
 
-  async function toggleDone(id: string, isDone: boolean) {
+  const toggleDone = React.useCallback(async (id: string, isDone: boolean) => {
     const { data: userData, error: userError } = await supabase.auth.getUser();
     if (userError) return;
 
@@ -206,25 +207,24 @@ export function useTodoItems(listId: string) {
       );
       Alert.alert("Error", "Failed to update item. Please try again.");
     }
-  }
+  }, []);
 
-  async function selectExistingItem(
+  const selectExistingItem = React.useCallback(async (
     listItemId: string,
     isDone: boolean,
-  ): Promise<boolean> {
+  ): Promise<boolean> => {
     const now = new Date().toISOString();
     const update: Record<string, unknown> = { created_at: now };
     if (isDone) update.is_done = false;
 
-    let previousItems: TodoItem[] = [];
-    setItems((prev) => {
-      previousItems = prev;
-      return prev.map((item) =>
+    const snapshot = itemsRef.current;
+    setItems((prev) =>
+      prev.map((item) =>
         item.id === listItemId
           ? { ...item, createdAt: now, ...(isDone ? { isDone: false } : {}) }
           : item,
-      );
-    });
+      ),
+    );
 
     const { error } = await supabase
       .from("todo_list_items")
@@ -232,16 +232,16 @@ export function useTodoItems(listId: string) {
       .eq("id", listItemId);
 
     if (error) {
-      setItems(previousItems);
+      setItems(snapshot);
       Alert.alert("Error", "Failed to update item. Please try again.");
       return false;
     }
 
     return true;
-  }
+  }, []);
 
-  async function renameItem(id: string, newName: string): Promise<boolean> {
-    const item = items.find((i) => i.id === id);
+  const renameItem = React.useCallback(async (id: string, newName: string): Promise<boolean> => {
+    const item = itemsRef.current.find((i) => i.id === id);
     if (!item) return false;
 
     const trimmed = newName.trim();
@@ -250,7 +250,7 @@ export function useTodoItems(listId: string) {
     const { translatedText, error: translateError } = await translateText(trimmed);
     if (translateError) Alert.alert("Translation error", translateError);
 
-    const previousItems = items;
+    const snapshot = itemsRef.current;
     setItems((prev) =>
       prev.map((i) =>
         i.id === id
@@ -265,21 +265,22 @@ export function useTodoItems(listId: string) {
       .eq("id", item.itemId);
 
     if (error) {
-      setItems(previousItems);
+      setItems(snapshot);
       Alert.alert("Error", "Failed to rename item. Please try again.");
       return false;
     }
 
     return true;
-  }
+  }, []);
 
-  async function updateItem(
+  const updateItem = React.useCallback(async (
     id: string,
     patch: { translationOverride: string | null; shopId: string | null },
-  ): Promise<boolean> {
-    const item = items.find((i) => i.id === id);
+  ): Promise<boolean> => {
+    const item = itemsRef.current.find((i) => i.id === id);
     if (!item) return false;
 
+    const snapshot = itemsRef.current;
     setItems((prev) =>
       prev.map((i) =>
         i.id === id
@@ -304,23 +305,13 @@ export function useTodoItems(listId: string) {
     ]);
 
     if (itemsResult.error || listItemsResult.error) {
-      setItems((prev) =>
-        prev.map((i) =>
-          i.id === id
-            ? {
-                ...i,
-                translationOverride: item.translationOverride,
-                shopId: item.shopId,
-              }
-            : i,
-        ),
-      );
+      setItems(snapshot);
       Alert.alert("Error", "Failed to update item. Please try again.");
       return false;
     }
 
     return true;
-  }
+  }, []);
 
   return {
     items,
