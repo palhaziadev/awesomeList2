@@ -21,24 +21,26 @@ export async function signInWithGoogle() {
   await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
 
   const response = await GoogleSignin.signIn();
+
   if (response.type !== "success") {
-    throw new Error("Google sign-in was cancelled or failed");
+    throw new Error(`Google sign-in failed: ${response.type}`);
   }
 
   const { idToken } = response.data;
-  const credential = GoogleAuthProvider.credential(idToken);
-
-  // TODO: better error handling maybe add try/catch block
   if (!idToken) {
-    throw new Error("Google sign-in was cancelled or failed");
+    throw new Error("Google sign-in failed: no ID token returned");
   }
+
+  const credential = GoogleAuthProvider.credential(idToken);
 
   const { data, error } = await supabase.auth.signInWithIdToken({
     provider: "google",
     token: idToken,
   });
 
-  console.log("aaa Supabase sign-in response:", { data, error });
+  if (error) {
+    throw new Error("Google sign-in failed");
+  }
 
   return signInWithCredential(auth, credential);
 }

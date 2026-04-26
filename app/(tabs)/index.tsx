@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
+import { LoginPromptDialog } from "@/components/LoginPromptDialog";
+import { useAuth } from "@/context/auth-context";
 import { supabase } from "@/lib/supabase.config";
 import { TodoList } from "@/models/Todo";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -22,6 +24,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const [lists, setLists] = React.useState<TodoList[]>([]);
   const [inputText, setInputText] = React.useState("");
   const [isSaving, setIsSaving] = React.useState(false);
@@ -106,6 +109,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView className="flex-1 p-4 gap-3">
+      <LoginPromptDialog open={!isAuthLoading && !user} />
       <View className="flex-row gap-2">
         <Input
           className="flex-1"

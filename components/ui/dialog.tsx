@@ -56,10 +56,12 @@ function DialogOverlay({
 function DialogContent({
   className,
   portalHost,
+  hideCloseButton,
   children,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   portalHost?: string;
+  hideCloseButton?: boolean;
 }) {
   return (
     <DialogPortal hostName={portalHost}>
@@ -75,7 +77,7 @@ function DialogContent({
           {...props}
         >
           <>{children}</>
-          <DialogPrimitive.Close
+          {!hideCloseButton && <DialogPrimitive.Close
             className={cn(
               "absolute right-4 top-4 rounded opacity-70 active:opacity-100",
               Platform.select({
@@ -91,7 +93,7 @@ function DialogContent({
               )}
             />
             <Text className="sr-only">Close</Text>
-          </DialogPrimitive.Close>
+          </DialogPrimitive.Close>}
         </DialogPrimitive.Content>
       </DialogOverlay>
     </DialogPortal>

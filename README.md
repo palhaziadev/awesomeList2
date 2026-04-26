@@ -54,6 +54,7 @@ Join our community of developers creating universal apps.
 - [x] Add autocomplete for add items input
 - [x] Add different ordering options
 - [ ] Add pull+refresh to lists
+- [ ] Add empty state to lists
 - [x] Add translation for items
 - [ ] Add list item recognition from photo
 - [ ] Create better table policies
@@ -68,4 +69,4 @@ Join our community of developers creating universal apps.
 - [x] show colors on shop dropdown items
 - [ ] add modify item name
 - [x] save user settings
-- [ ] create login page
+- [x] create login page
