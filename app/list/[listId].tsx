@@ -16,6 +16,7 @@ import {
   AutocompleteSuggestion,
   useAutocomplete,
 } from "@/hooks/useAutocomplete";
+import { useListSettings } from "@/hooks/useListSettings";
 import { useShops } from "@/hooks/useShops";
 import { useTodoItems } from "@/hooks/useTodoItems";
 import { TodoItem } from "@/models/Todo";
@@ -66,14 +67,8 @@ export default function ListScreen() {
   React.useEffect(() => {
     setUserDismissed(false);
   }, [inputText]);
-  const [grouping, setGrouping] = React.useState(true);
-  const [groupByShop, setGroupByShop] = React.useState(false);
-  const [dateOrder, setDateOrder] = React.useState<"asc" | "desc" | null>(
-    "desc",
-  );
-  const [alphaOrder, setAlphaOrder] = React.useState<"asc" | "desc" | null>(
-    null,
-  );
+  const { settings, update } = useListSettings();
+  const { groupbyIsDone, groupByShop, dateOrder, alphaOrder } = settings;
 
   const sortedItems = React.useMemo(() => {
     let result = [...items];
@@ -167,27 +162,21 @@ export default function ListScreen() {
       <View className="flex-row items-center justify-between">
         <Text className="text-sm text-muted-foreground">Grouping</Text>
         <View className="flex-row items-center gap-3">
-          <Switch checked={grouping} onCheckedChange={setGrouping} />
+          <Switch checked={groupbyIsDone} onCheckedChange={(value) => update({ groupbyIsDone: value })} />
           <ItemListFilter
             groupByShop={groupByShop}
-            onGroupByShopChange={setGroupByShop}
+            onGroupByShopChange={(value) => update({ groupByShop: value })}
             dateOrder={dateOrder}
-            onDateOrderChange={(order) => {
-              setAlphaOrder(null);
-              setDateOrder(order);
-            }}
+            onDateOrderChange={(order) => update({ alphaOrder: null, dateOrder: order })}
             alphaOrder={alphaOrder}
-            onAlphaOrderChange={(order) => {
-              setDateOrder(null);
-              setAlphaOrder(order);
-            }}
+            onAlphaOrderChange={(order) => update({ dateOrder: null, alphaOrder: order })}
           />
         </View>
       </View>
       <ScrollView className="flex-1" contentContainerClassName="gap-2">
         {isLoading && <ActivityIndicator className="mt-4" />}
         {groupByShop ? (
-          grouping ? (
+          groupbyIsDone ? (
             <>
               {pendingShopGroups.map((group) => (
                 <React.Fragment key={`pending-${group.shopId ?? "__other__"}`}>
@@ -249,7 +238,7 @@ export default function ListScreen() {
               ))}
             </>
           )
-        ) : grouping ? (
+        ) : groupbyIsDone ? (
           <>
             {pendingItems.map((item) => (
               <TodoItemRow

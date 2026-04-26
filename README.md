@@ -67,5 +67,5 @@ Join our community of developers creating universal apps.
 - [ ] add e2e testing https://maestro.dev/
 - [x] show colors on shop dropdown items
 - [ ] add modify item name
-- [ ] save user settings
+- [x] save user settings
 - [ ] create login page
