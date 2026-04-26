@@ -11,6 +11,8 @@ const Animated = {
 const LinearTransition = { delay: () => LinearTransition };
 const SlideInLeft = { delay: () => SlideInLeft };
 const SlideOutRight = {};
+const FadeIn = { duration: () => FadeIn };
+const FadeOut = { duration: () => FadeOut };
 
 module.exports = {
   __esModule: true,
@@ -19,6 +21,8 @@ module.exports = {
   LinearTransition,
   SlideInLeft,
   SlideOutRight,
+  FadeIn,
+  FadeOut,
   useSharedValue: (init) => ({ value: init }),
   useAnimatedStyle: (fn) => fn(),
   withTiming: (val) => val,
