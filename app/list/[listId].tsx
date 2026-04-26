@@ -19,6 +19,7 @@ import {
 import { useShops } from "@/hooks/useShops";
 import { useTodoItems } from "@/hooks/useTodoItems";
 import { TodoItem } from "@/models/Todo";
+import { buildShopGroups } from "@/utils/groupByShop";
 import type { TriggerRef } from "@rn-primitives/dropdown-menu";
 import { useLocalSearchParams } from "expo-router";
 import * as React from "react";
@@ -66,6 +67,7 @@ export default function ListScreen() {
     setUserDismissed(false);
   }, [inputText]);
   const [grouping, setGrouping] = React.useState(true);
+  const [groupByShop, setGroupByShop] = React.useState(false);
   const [dateOrder, setDateOrder] = React.useState<"asc" | "desc" | null>(
     "desc",
   );
@@ -154,6 +156,8 @@ export default function ListScreen() {
         <View className="flex-row items-center gap-3">
           <Switch checked={grouping} onCheckedChange={setGrouping} />
           <ItemListFilter
+            groupByShop={groupByShop}
+            onGroupByShopChange={setGroupByShop}
             dateOrder={dateOrder}
             onDateOrderChange={(order) => {
               setAlphaOrder(null);
@@ -169,7 +173,70 @@ export default function ListScreen() {
       </View>
       <ScrollView className="flex-1" contentContainerClassName="gap-2">
         {isLoading && <ActivityIndicator className="mt-4" />}
-        {grouping ? (
+        {groupByShop ? (
+          grouping ? (
+            <>
+              {buildShopGroups(pendingItems, shops).map((group) => (
+                <React.Fragment key={group.shopId ?? "__other__"}>
+                  <Text className="text-xs text-muted-foreground mt-1">
+                    {group.shopName}
+                  </Text>
+                  {group.items.map((item) => (
+                    <TodoItemRow
+                      key={item.id}
+                      item={item}
+                      onRemove={removeItem}
+                      onToggleDone={toggleDone}
+                      onPress={() => setSelectedItem(item)}
+                    />
+                  ))}
+                </React.Fragment>
+              ))}
+              {pendingItems.length > 0 && doneItems.length > 0 && (
+                <View className="flex-row items-center gap-2 my-1">
+                  <View className="flex-1 h-px bg-border" />
+                  <Text className="text-xs text-muted-foreground">Done</Text>
+                  <View className="flex-1 h-px bg-border" />
+                </View>
+              )}
+              {buildShopGroups(doneItems, shops).map((group) => (
+                <React.Fragment key={group.shopId ?? "__other__"}>
+                  <Text className="text-xs text-muted-foreground mt-1">
+                    {group.shopName}
+                  </Text>
+                  {group.items.map((item) => (
+                    <TodoItemRow
+                      key={item.id}
+                      item={item}
+                      onRemove={removeItem}
+                      onToggleDone={toggleDone}
+                      onPress={() => setSelectedItem(item)}
+                    />
+                  ))}
+                </React.Fragment>
+              ))}
+            </>
+          ) : (
+            <>
+              {buildShopGroups(sortedItems, shops).map((group) => (
+                <React.Fragment key={group.shopId ?? "__other__"}>
+                  <Text className="text-xs text-muted-foreground mt-1">
+                    {group.shopName}
+                  </Text>
+                  {group.items.map((item) => (
+                    <TodoItemRow
+                      key={item.id}
+                      item={item}
+                      onRemove={removeItem}
+                      onToggleDone={toggleDone}
+                      onPress={() => setSelectedItem(item)}
+                    />
+                  ))}
+                </React.Fragment>
+              ))}
+            </>
+          )
+        ) : grouping ? (
           <>
             {pendingItems.map((item) => (
               <TodoItemRow
