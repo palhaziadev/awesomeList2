@@ -6,7 +6,7 @@ type TodoListItemRow = {
   created_at: string;
   created_by: string | null;
   is_done: boolean | null;
-  shop_id?: string | null;
+  shop_id?: string | number | null;
 };
 
 export function mapRowToTodoItem(
@@ -21,7 +21,7 @@ export function mapRowToTodoItem(
     itemName,
     translation,
     translationOverride,
-    shopId: row.shop_id ?? undefined,
+    shopId: row.shop_id != null ? String(row.shop_id) : undefined,
     createdAt: row.created_at,
     createdBy: row.created_by ?? "",
     isDone: row.is_done ?? false,

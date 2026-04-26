@@ -14,6 +14,8 @@ import { Text, View } from "react-native";
 type Order = "asc" | "desc" | null;
 
 type Props = {
+  groupByShop?: boolean;
+  onGroupByShopChange?: (value: boolean) => void;
   dateOrder?: Order;
   onDateOrderChange?: (order: "asc" | "desc") => void;
   alphaOrder?: Order;
@@ -58,6 +60,8 @@ function OrderToggle({
 }
 
 export function ItemListFilter({
+  groupByShop,
+  onGroupByShopChange,
   dateOrder,
   onDateOrderChange,
   alphaOrder,
@@ -70,6 +74,28 @@ export function ItemListFilter({
       </PopoverTrigger>
       <PopoverContent className="w-52 p-3">
         <View className="gap-4">
+          <View className="gap-2">
+            <Text className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              Group by Shop
+            </Text>
+            <Toggle
+              testID="group-by-shop-toggle"
+              pressed={groupByShop ?? false}
+              onPressedChange={(pressed) => onGroupByShopChange?.(pressed)}
+              variant="outline"
+              size="sm"
+            >
+              <Text
+                className={
+                  groupByShop
+                    ? "text-accent-foreground text-xs"
+                    : "text-muted-foreground text-xs"
+                }
+              >
+                Group by shop
+              </Text>
+            </Toggle>
+          </View>
           <View className="gap-2">
             <Text className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
               Order by Date
